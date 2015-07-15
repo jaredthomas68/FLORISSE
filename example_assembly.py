@@ -85,8 +85,8 @@ class floris_assembly_opt(Assembly):
         self.driver.maxiter = 100
         self.driver.add_objective('-floris_power.power')
         # self.driver.add_objective('-sum(floris_power.velocitiesTurbines)')
-        self.driver.add_parameter('turbineX', low=0., high=3000.)
-        self.driver.add_parameter('turbineY', low=0., high=3000.)
+        # self.driver.add_parameter('turbineX', low=0., high=3000.)
+        # self.driver.add_parameter('turbineY', low=0., high=3000.)
         self.driver.add_parameter('yaw', low=-30., high=30.)
 
         self.driver.workflow.add(['floris_adjustCtCp', 'floris_windframe', 'floris_wcent_wdiam', 'floris_overlap', \
@@ -102,7 +102,7 @@ class floris_assembly_opt(Assembly):
         self.connect('Ct', 'floris_adjustCtCp.Ct_in')
         self.connect('Cp', 'floris_adjustCtCp.Cp_in')
         self.connect('generator_efficiency', 'floris_power.generator_efficiency')
-        self.connect('yaw', 'floris_adjustCtCp.yaw')
+        self.connect('yaw', ['floris_adjustCtCp.yaw', 'floris_wcent_wdiam.yaw'])
         self.connect('wind_speed', 'floris_power.wind_speed')
         self.connect('air_density', 'floris_power.air_density')
         self.connect('wind_direction', 'floris_windframe.wind_direction')
@@ -113,7 +113,6 @@ class floris_assembly_opt(Assembly):
         self.connect('yaw', 'floris_windframe.yaw')
         self.connect('floris_adjustCtCp.Cp_out', 'floris_windframe.Cp')
         self.connect('floris_adjustCtCp.Ct_out', 'floris_windframe.Ct')
-        # self.connect('floris_adjustCtCp.yaw', 'floris_windframe.yaw')
         self.connect('wind_speed', 'floris_windframe.wind_speed')
         self.connect('axialInduction', 'floris_windframe.axialInduction')
 
@@ -121,7 +120,7 @@ class floris_assembly_opt(Assembly):
         # connections from CtCp adjustment to others
         self.connect('floris_adjustCtCp.Ct_out', ['floris_wcent_wdiam.Ct', 'floris_power.Ct'])
         self.connect('floris_adjustCtCp.Cp_out', 'floris_power.Cp')
-        self.connect('floris_adjustCtCp.yaw', 'floris_wcent_wdiam.yaw')
+
 
         # connections from floris_windframe to floris_wcent_wdiam
         self.connect("floris_windframe.turbineXw", "floris_wcent_wdiam.turbineXw")
@@ -193,9 +192,6 @@ class floris_assembly(Assembly):
     wakeCentersYT = Array(dtype='float', iotype='out', units='m', desc='centers of the wakes at each turbine')
     wakeDiametersT = Array(dtype='float', iotype='out', units='m', desc='diameters of each of the wake zones for each of the wakes at each turbine')
     wakeOverlapTRel = Array(dtype='float', iotype='out', units='m', desc='ratio of overlap area of each zone to rotor area')
-
-    # testing
-    # p_near0 = Float(iotyp='out', desc='upwind location of diameter spline in rotor diameters')
 
     # final output
     power = Float(iotype='out', units='kW', desc='total windfarm power')

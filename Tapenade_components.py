@@ -41,7 +41,7 @@ class floris_wcent_wdiam(Component):
 
         # yaw in degrees
         yaw_deg = self.yaw
-
+        print yaw_deg, Ct
         wakeCentersYT_vec, wakeDiametersT_vec = _floris.floris_wcent_wdiam(kd, initialWakeDisplacement, \
 							  initialWakeAngle, ke, keCorrCT, Region2CT, yaw_deg, Ct, turbineXw, turbineYw, \
                               rotorDiameter, me)

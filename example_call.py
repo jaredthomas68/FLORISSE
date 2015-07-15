@@ -15,8 +15,8 @@ if __name__ == "__main__":
     # define all turbine properties
     # turbineX = np.array([1164.7, 947.2,  1682.4, 1464.9, 1982.6, 2200.1, 1164.7+x, 947.2+x,  1682.4+x, 1464.9+x, 1982.6+x, 2200.1+x])
     # turbineY = np.array([1024.7, 1335.3, 1387.2, 1697.8, 2060.3, 1749.7, 1024.7+y, 1335.3+y, 1387.2+y, 1697.8+y, 2060.3+y, 1749.7+y])
-    turbineX = np.array([1164.7, 947.2,  1682.4, 1464.9, 1982.6, 2200.1])#*0.05
-    turbineY = np.array([1024.7, 1335.3, 1387.2, 1697.8, 2060.3, 1749.7])#*0.05
+    turbineX = np.array([1164.7, 947.2,  1682.4, 1464.9, 1982.6, 2200.1])
+    turbineY = np.array([1024.7, 1335.3, 1387.2, 1697.8, 2060.3, 1749.7])
 
     nTurbs = turbineX.size
     position = np.zeros([nTurbs, 2])
@@ -27,13 +27,13 @@ if __name__ == "__main__":
     generator_efficiency = np.zeros(nTurbs)
     yaw = np.zeros(nTurbs)
 
-    resolution = 200
-    xlim = [0, 3000]
-    ylim = [0, 3000]
-    x = np.linspace(xlim[0], xlim[1], resolution)
-    y = np.linspace(ylim[0], ylim[1], resolution)
-    x, y = np.meshgrid(x, y)
-    myFloris.ws_position = np.array([x.flatten(), y.flatten()]).transpose()
+    # resolution = 200
+    # xlim = [0, 3000]
+    # ylim = [0, 3000]
+    # x = np.linspace(xlim[0], xlim[1], resolution)
+    # y = np.linspace(ylim[0], ylim[1], resolution)
+    # x, y = np.meshgrid(x, y)
+    # myFloris.ws_position = np.array([x.flatten(), y.flatten()]).transpose()
 
     for turbI in range(0, nTurbs):
 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     myFloris2.Ct = Ct
     myFloris2.Cp = Cp
     myFloris2.generator_efficiency = generator_efficiency
-    myFloris2.yaw = myFloris.floris_adjustCtCp.yaw
+    myFloris2.yaw = myFloris.yaw
 
     # # Define flow properties
     myFloris2.wind_speed = 8.0  # m/s

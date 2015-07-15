@@ -270,3 +270,36 @@ class floris_windrose(Component):
     # def provideJ(self):
     #
     #     return self.J
+
+
+class floris_combine_directions(Component):
+    power_directions = Array(iotype='in', units='kW', desc='vector containing the power production at each wind direction')
+    weight = Array(iotype='in', units=None, desc='vector containing the weighted frequency of wind at each direction')
+
+    AEP = Float(iotype='out', units='kW', desc='total annual energy output of wind farm')
+
+
+    def execute(self):
+
+        power_directions = self.power_directions
+        weight = self.weight
+
+        AEP = sum(power_directions*weight)
+
+        self.AEP = AEP
+
+    def list_deriv_vars(self):
+
+        return ('power_directions',), ('AEP',)
+
+    def provideJ(self):
+
+        weight = self.weight
+        ndirs = np.size(weight)
+
+        dAEP_dpower = np.eye(ndirs)*weight
+
+        J = dAEP_dpower
+
+        return J
+

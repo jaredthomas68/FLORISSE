@@ -18,7 +18,10 @@ Installation instructions MAC
 Installation instructions Windows
 ---------------------------------
 - system requirements
+    gfortran
+    gcc
     mingw
+    python 2.7.x
     numpy
     openmdao v0.10.3.2
 - put all files in desired directory

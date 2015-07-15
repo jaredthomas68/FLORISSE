@@ -38,7 +38,6 @@ class floris_assembly_opt(Assembly):
 
     # wt_layout input variables
     rotorDiameter = Array(dtype='float', iotype='in', units='m', desc='rotor diameters of all turbine')
-    rotorArea = Array(iotype='in', dtype='float', units='m*m', desc='rotor area of all turbines')
     axialInduction = Array(iotype='in', dtype='float', desc='axial induction of all turbines')
     Ct = Array(iotype='in', desc='Thrust coefficient for all turbines')
     Cp = Array(iotype='in', dtype='float', desc='power coefficient for all turbines')
@@ -99,7 +98,6 @@ class floris_assembly_opt(Assembly):
         self.connect('turbineX', 'floris_windframe.turbineX')
         self.connect('turbineY', 'floris_windframe.turbineY')
         self.connect('rotorDiameter', ['floris_wcent_wdiam.rotorDiameter', 'floris_overlap.rotorDiameter', 'floris_power.rotorDiameter'])
-        self.connect('rotorArea', ['floris_overlap.rotorArea', 'floris_power.rotorArea'])
         self.connect('axialInduction', 'floris_power.axialInduction')
         self.connect('Ct', 'floris_adjustCtCp.Ct_in')
         self.connect('Cp', 'floris_adjustCtCp.Cp_in')

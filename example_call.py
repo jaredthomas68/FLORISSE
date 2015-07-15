@@ -21,7 +21,6 @@ if __name__ == "__main__":
     nTurbs = turbineX.size
     position = np.zeros([nTurbs, 2])
     rotorDiameter = np.zeros(nTurbs)
-    rotorArea = np.zeros(nTurbs)
     axialInduction = np.zeros(nTurbs)
     Ct = np.zeros(nTurbs)
     Cp = np.zeros(nTurbs)
@@ -42,7 +41,6 @@ if __name__ == "__main__":
         # position[turbI, 1] = turbineY[turbI]
 
         rotorDiameter[turbI] = 126.4
-        rotorArea[turbI] = 0.25*np.pi*rotorDiameter[turbI]*rotorDiameter[turbI]
         axialInduction[turbI] = 1.0/3.0
         Ct[turbI] = 4.0*axialInduction[turbI]*(1.0-axialInduction[turbI])
         Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2)
@@ -56,7 +54,6 @@ if __name__ == "__main__":
     # myFloris.floris_windframe.turbineX = turbineX
     # myFloris.floris_windframe.turbineY = turbineY
     myFloris.rotorDiameter = rotorDiameter
-    myFloris.rotorArea = rotorArea
     myFloris.axialInduction = axialInduction
     myFloris.Ct = Ct
     myFloris.Cp = Cp
@@ -116,7 +113,7 @@ if __name__ == "__main__":
     myFloris2.turbineY = myFloris.floris_windframe.turbineY
 
     myFloris2.rotorDiameter = rotorDiameter
-    myFloris2.rotorArea = rotorArea
+    myFloris2.rotorArea = np.pi*rotorDiameter*rotorDiameter/4.0
     myFloris2.axialInduction = axialInduction
     myFloris2.Ct = Ct
     myFloris2.Cp = Cp

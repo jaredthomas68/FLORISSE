@@ -118,7 +118,6 @@ class floris_overlap(Component):
     rotorDiameter = Array(iotype='in', units='m', desc='diameters of all turbine rotors')
     wakeDiametersT = Array(iotype='in', units='m', desc='diameters of all turbines wake zones')
     wakeCentersYT = Array(iotype='in', units='m', desc='Y positions of all wakes at each turbine')
-    rotorArea = Array(iotype='in', units='m*m', desc='Area of each turbine rotor')
 
     wakeOverlapTRel = Array(iotype='out', desc='relative wake zone overlap to rotor area')
 
@@ -176,7 +175,6 @@ class floris_power(Component):
 
     # input variables added so I don't have to use WISDEM while developing gradients
     rotorDiameter = Array(dtype='float', iotype='in', units='m', desc='rotor diameters of all turbine')
-    rotorArea = Array(iotype='in', dtype='float', units='m*m', desc='rotor area of all turbines')
     axialInduction = Array(iotype='in', dtype='float', desc='axial induction of all turbines')
     Ct = Array(iotype='in', dtype='float', desc='Thrust coefficient for all turbines')
     Cp = Array(iotype='in', dtype='float', desc='power coefficient for all turbines')
@@ -209,7 +207,6 @@ class floris_power(Component):
         turbineXw = self.turbineXw
         axialInduction = self.axialInduction
         rotorDiameter = self.rotorDiameter
-        rotorArea = self.rotorArea
         rho = self.air_density
         generator_efficiency = self.generator_efficiency
         Cp = self.Cp
@@ -218,6 +215,7 @@ class floris_power(Component):
 
         # how far in front of turbines to use overlap power calculations (in rotor diameters). This must match the
         # value used in floris_wcent_wdiam (hardcoded in fortran as 1)
+        # TODO hard code this parameter in the fortran code and remove the specifier from all functions of this component
         p_near0 = 1.0
 
         # pass p_near0 to self for use in gradient calculations
@@ -232,7 +230,7 @@ class floris_power(Component):
         # optional print statements
         if self.verbose:
             print "wind speed at turbines %s [m/s]" % velocitiesTurbines
-            print "rotor area %s" % rotorArea
+            print "rotor area %s" % np.pi*rotorDiameter*rotorDiameter/4.0
             print "rho %s" % rho
             print "generator_efficiency %s" % generator_efficiency
             print "powers turbines %s [kW]" % wt_power
@@ -271,7 +269,6 @@ class floris_power(Component):
         turbineXw = self.turbineXw
         axialInduction = self.axialInduction
         rotorDiameter = self.rotorDiameter
-        rotorArea = self.rotorArea
         rho = self.air_density
         generator_efficiency = self.generator_efficiency
         Cp = self.Cp

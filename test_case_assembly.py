@@ -48,7 +48,7 @@ class floris_assembly_opt(Assembly):
     yaw = Array(iotype='in', desc='yaw of each turbine')
 
     # cases
-    cases = ListCaseIterator(iotype='in', desc='list of cases for working with a windrose')
+    # cases = ListCaseIterator(iotype='in', desc='list of cases for working with a windrose')
 
     # FUSED-Wind compatibility - incomplete
     wt_layout = VarTree(GenericWindFarmTurbineLayout(), iotype='in', desc='wind turbine properties and layout')
@@ -91,7 +91,7 @@ class floris_assembly_opt(Assembly):
         # self.driver.add_objective('-sum(floris_power.velocitiesTurbines)')
         # self.driver.add_parameter('turbineX', low=0., high=3000.)
         # self.driver.add_parameter('turbineY', low=0., high=3000.)
-        self.driver.add_parameter('yaw', low=-30., high=30.)
+        self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
 
         self.driver.workflow.add(['floris_adjustCtCp', 'floris_windframe', 'floris_wcent_wdiam', 'floris_overlap', \
                                   'floris_power'])

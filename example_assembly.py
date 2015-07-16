@@ -18,7 +18,7 @@ from fusedwind.plant_flow.vt import GenericWindFarmTurbineLayout
 from Analytic_components import floris_adjustCtCp
 from Analytic_components import floris_windframe
 
-# ###########    imports for Tapenade components    ###################################################################
+# ###########    imports for Tapenade components (Fortran with provided gradients)    #################################
 from Tapenade_components import floris_wcent_wdiam
 from Tapenade_components import floris_overlap
 from Tapenade_components import floris_power
@@ -120,7 +120,6 @@ class floris_assembly_opt(Assembly):
         # connections from CtCp adjustment to others
         self.connect('floris_adjustCtCp.Ct_out', ['floris_wcent_wdiam.Ct', 'floris_power.Ct'])
         self.connect('floris_adjustCtCp.Cp_out', 'floris_power.Cp')
-
 
         # connections from floris_windframe to floris_wcent_wdiam
         self.connect("floris_windframe.turbineXw", "floris_wcent_wdiam.turbineXw")

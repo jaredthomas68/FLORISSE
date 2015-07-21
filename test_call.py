@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     myFloris = floris_assembly_opt()
     rotor_diameter = 126.4
-    nRows = 2
+    nRows = 5
     spacing = 7
 
     # windrose for test case from Pieter
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         Ct[turbI] = 4.0*axialInduction[turbI]*(1.0-axialInduction[turbI])
         Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2)
         generator_efficiency[turbI] = 0.944
-        yaw[turbI] = 5.
+        yaw[turbI] = 0.
         # yaw[turbI] = 0
 
     # myFloris.position = position
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     # Define flow properties
     myFloris.wind_speed = 8.0  # m/s
     myFloris.air_density = 1.1716  # kg/m^3
-    myFloris.wind_direction = 0  # deg
+    myFloris.wind_direction = 30  # deg
     myFloris.verbose = False
 
     myFloris.parameters.CPcorrected = False
@@ -155,8 +155,8 @@ if __name__ == "__main__":
 
     # define sampling points for final visualization (GenericFlowModel)
     resolution = 200
-    xlim = [0, 3000]
-    ylim = [0, 3000]
+    xlim = [0, np.max(myFloris.turbineX)+spacing*rotor_diameter]
+    ylim = [0, np.max(myFloris.turbineY)+spacing*rotor_diameter]
     x = np.linspace(xlim[0], xlim[1], resolution)
     y = np.linspace(ylim[0], ylim[1], resolution)
     x, y = np.meshgrid(x, y)

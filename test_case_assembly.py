@@ -1,6 +1,7 @@
 from openmdao.main.api import Assembly
 from openmdao.lib.datatypes.api import Array, Bool, Float, VarTree
 from openmdao.lib.drivers.api import SLSQPdriver
+from pyopt_driver.pyopt_driver import pyOptDriver
 from openmdao.lib.casehandlers.listcase import ListCaseIterator
 from Parameters import FLORISParameters
 
@@ -83,14 +84,16 @@ class floris_assembly_opt(Assembly):
         self.add('floris_power', floris_power())
 
         # added for optimization testing
-        self.add('driver', SLSQPdriver())
+        # self.add('driver', SLSQPdriver())
+        self.add('driver', pyOptDriver())
+        self.driver.optimizer = 'SNOPT'
         self.driver.iprint = 3
         self.driver.accuracy = 1.0e-12
         self.driver.maxiter = 100
         self.driver.add_objective('-floris_power.power')
         # self.driver.add_objective('-sum(floris_power.velocitiesTurbines)')
-        # self.driver.add_parameter('turbineX', low=0., high=3000.)
-        # self.driver.add_parameter('turbineY', low=0., high=3000.)
+        self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
+        self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
         self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
 
         self.driver.workflow.add(['floris_adjustCtCp', 'floris_windframe', 'floris_wcent_wdiam', 'floris_overlap', \

@@ -303,19 +303,29 @@ class floris_windrose(Component):
     #     return self.J
 
 
-class floris_combine_directions(Component):
-    power_directions = Array(iotype='in', units='kW', desc='vector containing the power production at each wind direction')
-    weight = Array(iotype='in', units=None, desc='vector containing the weighted frequency of wind at each direction')
+class floris_AEP(Component):
 
     AEP = Float(iotype='out', units='kW', desc='total annual energy output of wind farm')
 
+    def __init__(self, nDirections):
+        super(floris_AEP, self).__init__()
+
+        self.add('power_directions', Array(np.zeros(nDirections), iotype='in', units='kW', \
+                                           desc='vector containing the power production at each wind \
+                                           direction ccw from north'))
+        self.add('weight', Array(np.zeros(nDirections), iotype='in', units=None, \
+                                 desc='vector containing the weighted frequency of wind at each direction \
+                                 ccw from north'))
 
     def execute(self):
 
         power_directions = self.power_directions
         weight = self.weight
 
-        AEP = sum(power_directions*weight)
+        # number of hours in a year
+        hours = 8760.0
+
+        AEP = sum(power_directions*weight)*hours
 
         self.AEP = AEP
 
@@ -328,7 +338,10 @@ class floris_combine_directions(Component):
         weight = self.weight
         ndirs = np.size(weight)
 
-        dAEP_dpower = np.eye(ndirs)*weight
+        # number of hours in a year
+        hours = 8760.0
+
+        dAEP_dpower = np.eye(ndirs)*weight*hours
 
         J = dAEP_dpower
 

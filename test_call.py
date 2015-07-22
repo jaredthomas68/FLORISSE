@@ -8,7 +8,7 @@ import numpy as np
 
 if __name__ == "__main__":
 
-    myFloris = floris_assembly_opt()
+
     rotor_diameter = 126.4
     nRows = 5
     spacing = 7
@@ -72,9 +72,12 @@ if __name__ == "__main__":
         yaw[turbI] = 0.
         # yaw[turbI] = 0
 
+    # myFloris = floris_assembly_opt(turbineX, turbineY, yaw, resolution=0)
+    myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=2)
+
     # myFloris.position = position
-    myFloris.turbineX = turbineX
-    myFloris.turbineY = turbineY
+    # myFloris.turbineX = turbineX
+    # myFloris.turbineY = turbineY
     # myFloris.floris_windframe.turbineX = turbineX
     # myFloris.floris_windframe.turbineY = turbineY
     myFloris.rotorDiameter = rotorDiameter
@@ -83,7 +86,7 @@ if __name__ == "__main__":
     myFloris.Cp = Cp
     myFloris.generator_efficiency = generator_efficiency
     # myFloris.yaw = yaw
-    myFloris.yaw = yaw
+    # myFloris.yaw = yaw
 
     # Define flow properties
     myFloris.wind_speed = 8.0  # m/s

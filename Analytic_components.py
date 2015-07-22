@@ -50,46 +50,46 @@ class floris_adjustCtCp(Component):
 
             self.Ct_out = Ct*np.cos(yaw)*np.cos(yaw)
             #
-            # dCt_dCt = np.eye(nTurbines, nTurbines)*np.cos(yaw)*np.cos(yaw)
-            # dCt_dyaw = np.eye(nTurbines, nTurbines)*(-2*np.sin(yaw)*np.cos(yaw))
-            # dCt_dCp = np.zeros((nTurbines, nTurbines))
-            # dCt = np.hstack((dCt_dCt, dCt_dCp, dCt_dyaw))
+            dCt_dCt = np.eye(nTurbines, nTurbines)*np.cos(yaw)*np.cos(yaw)
+            dCt_dyaw = np.eye(nTurbines, nTurbines)*(-2*np.sin(yaw)*np.cos(yaw))
+            dCt_dCp = np.zeros((nTurbines, nTurbines))
+            dCt = np.hstack((dCt_dCt, dCt_dCp, dCt_dyaw))
 
         else:
 
             self.Ct_out = Ct
-            # dCt_dCt = np.eye(nTurbines, nTurbines)*np.cos(yaw)*np.cos(yaw)
-            # dCt_dCp = np.zeros((nTurbines, nTurbines))
-            # dCt_dyaw = np.zeros((nTurbines, nTurbines))
-            # dCt = np.hstack((dCt_dCt, dCt_dCp, dCt_dyaw))
+            dCt_dCt = np.eye(nTurbines, nTurbines)
+            dCt_dCp = np.zeros((nTurbines, nTurbines))
+            dCt_dyaw = np.zeros((nTurbines, nTurbines))
+            dCt = np.hstack((dCt_dCt, dCt_dCp, dCt_dyaw))
 
         if not CPcorrected:
 
             self.Cp_out = Cp*np.cos(yaw)**pP
 
-            # dCp_dCp = np.eye(nTurbines, nTurbines)*np.cos(yaw)**pP
-            # dCp_dyaw = np.eye(nTurbines, nTurbines)*(-Cp*pP*np.sin(yaw)*np.cos(yaw)**(pP-1.0))
-            # dCp_dCt = np.zeros((nTurbines, nTurbines))
-            # dCp = np.hstack((dCp_dCt, dCp_dCp, dCp_dyaw))
+            dCp_dCp = np.eye(nTurbines, nTurbines)*np.cos(yaw)**pP
+            dCp_dyaw = np.eye(nTurbines, nTurbines)*(-Cp*pP*np.sin(yaw)*np.cos(yaw)**(pP-1.0))
+            dCp_dCt = np.zeros((nTurbines, nTurbines))
+            dCp = np.hstack((dCp_dCt, dCp_dCp, dCp_dyaw))
 
         else:
 
             self.Cp_out = Cp
-            # dCp_dCp = np.eye(nTurbines, nTurbines)*np.cos(yaw)**pP
-            # dCp_dCt = np.zeros((nTurbines, nTurbines))
-            # dCp_dyaw = np.zeros((nTurbines, nTurbines))
-            # dCp = np.hstack((dCp_dCt, dCp_dCp, dCp_dyaw))
-        #
-    #     self.J = np.vstack((dCt, dCp))
-    #
-    # def list_deriv_vars(self):
-    #
-    #     return ('Ct_in', 'Cp_in', 'yaw'), ('Ct_out', 'Cp_out')
-    #
-    #
-    # def provideJ(self):
-    #
-    #     return self.J
+            dCp_dCp = np.eye(nTurbines, nTurbines)
+            dCp_dCt = np.zeros((nTurbines, nTurbines))
+            dCp_dyaw = np.zeros((nTurbines, nTurbines))
+            dCp = np.hstack((dCp_dCt, dCp_dCp, dCp_dyaw))
+
+        self.J = np.vstack((dCt, dCp))
+
+    def list_deriv_vars(self):
+
+        return ('Ct_in', 'Cp_in', 'yaw'), ('Ct_out', 'Cp_out')
+
+
+    def provideJ(self):
+
+        return self.J
 
 
 class floris_windframe(Component):
@@ -115,10 +115,9 @@ class floris_windframe(Component):
                                    desc='y positions of turbines in original ref. frame'))
 
         # variables for verbosity
-        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', deriv_ignore='true', \
-                             dtype='float'))
-        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', deriv_ignore='true', \
-                             dtype='float', desc='power coefficient for all turbines'))
+        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', deriv_ignore=True))
+        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', missing_deriv_policy='assume_zero', \
+                             desc='power coefficient for all turbines'))
         self.add('axialInduction', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
                                          desc='axial induction of all turbines'))
         self.add('yaw', Array(np.zeros(nTurbines), iotype='in', deriv_ignore=True, \

@@ -47,7 +47,8 @@ class floris_assembly_opt(Assembly):
 
         super(floris_assembly_opt, self).__init__()
 
-        # nTurbines = len(turbineX)
+        self.nTurbines = nTurbines
+        self.resolution = resolution
 
         # Explicitly size input arrays
 
@@ -61,16 +62,13 @@ class floris_assembly_opt(Assembly):
                              desc='power coefficient for all turbines'))
         self.add('generator_efficiency', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
                                                desc='generator efficiency of all turbines'))
-        self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', \
+        self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
                                    desc='x positions of turbines in original ref. frame'))
-        self.add('turbineY', Array(np.zeros(nTurbines), iotype='in', \
+        self.add('turbineY', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
                                    desc='y positions of turbines in original ref. frame'))
-        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', \
+        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
                               desc='yaw of each turbine'))
 
-        # self.turbineX = turbineX
-        # self.turbineY = turbineY
-        # self.yaw = yaw
 
         # Explicitly size output arrays
 
@@ -87,22 +85,25 @@ class floris_assembly_opt(Assembly):
                                           desc='ratio of overlap area of each zone to rotor area'))
 
         # standard output
-        self.add('velocitiesTurbines', Array(np.zeros(nTurbines), iotype='out', units='m/s'))
-        self.add('wt_power', Array(np.zeros(nTurbines), iotype='out', units='kW'))
+        self.add('velocitiesTurbines', Array(np.zeros(nTurbines), iotype='out', units='m/s', dtype='float'))
+        self.add('wt_power', Array(np.zeros(nTurbines), iotype='out', units='kW', dtype='float'))
 
     def configure(self):
 
         # add driver so the workflow is not overwritten later
-        self.add('driver', SLSQPdriver())
-        # self.add('driver', pyOptDriver())
-        # self.driver.optimizer = 'SNOPT'
+        # self.add('driver', SLSQPdriver())
+        # self.driver.gradient_options.force_fd = True
+        self.add('driver', pyOptDriver())
+        self.driver.optimizer = 'SNOPT'
+        self.driver.pyopt_diff = True
+
 
         # add components to floris assembly
-        self.add('floris_adjustCtCp', floris_adjustCtCp(nTurbines=25))
-        self.add('floris_windframe', floris_windframe(nTurbines=25, resolution=20))
-        self.add('floris_wcent_wdiam', floris_wcent_wdiam(nTurbines=25))
-        self.add('floris_overlap', floris_overlap(nTurbines=25))
-        self.add('floris_power', floris_power(nTurbines=25))
+        self.add('floris_adjustCtCp', floris_adjustCtCp(nTurbines=self.nTurbines))
+        self.add('floris_windframe', floris_windframe(nTurbines=self.nTurbines, resolution=self.resolution))
+        self.add('floris_wcent_wdiam', floris_wcent_wdiam(nTurbines=self.nTurbines))
+        self.add('floris_overlap', floris_overlap(nTurbines=self.nTurbines))
+        self.add('floris_power', floris_power(nTurbines=self.nTurbines))
 
 
 
@@ -128,8 +129,8 @@ class floris_assembly_opt(Assembly):
         # self.connect('Cp', 'floris_windframe.Cp')
         # self.connect('Ct', 'floris_windframe.Ct')
         self.connect('yaw', 'floris_windframe.yaw')
-        self.connect('floris_adjustCtCp.Cp_out', 'floris_windframe.Cp')
         self.connect('floris_adjustCtCp.Ct_out', 'floris_windframe.Ct')
+        self.connect('floris_adjustCtCp.Cp_out', 'floris_windframe.Cp')
         self.connect('wind_speed', 'floris_windframe.wind_speed')
         self.connect('axialInduction', 'floris_windframe.axialInduction')
 
@@ -175,10 +176,9 @@ class floris_assembly_opt(Assembly):
         self.driver.accuracy = 1.0e-12
         self.driver.maxiter = 100
         self.driver.add_objective('-floris_power.power')
-        # self.driver.add_objective('-sum(floris_power.velocitiesTurbines)')
         self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
         self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
-        self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
+        # self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
 
 
 class floris_assembly(Assembly):

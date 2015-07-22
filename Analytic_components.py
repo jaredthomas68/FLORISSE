@@ -8,12 +8,24 @@ class floris_adjustCtCp(Component):
     """ Adjust Cp and Ct to yaw if they are not already adjusted """
 
     parameters = VarTree(FLORISParameters(), iotype='in')
-    Ct_in = Array(iotype='in', dtype='float', desc='Thrust coefficient for all turbines')
-    Cp_in = Array(iotype='in', dtype='float', desc='power coefficient for all turbines')
-    Ct_out = Array(iotype='out', dtype='float', desc='Thrust coefficient for all turbines')
-    Cp_out = Array(iotype='out', dtype='float', desc='power coefficient for all turbines')
-    generator_efficiency = Array(iotype='in', dtype='float', desc='generator efficiency of all turbines')
-    yaw = Array(iotype='in', desc='yaw of each turbine')
+
+    def __init__(self, nTurbines):
+        super(floris_adjustCtCp, self).__init__()
+
+        # Explicitly size input arrays
+        self.add('Ct_in', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                                desc='Thrust coefficient for all turbines'))
+        self.add('Cp_in', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                                desc='power coefficient for all turbines'))
+        self.add('generator_efficiency', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                desc='generator efficiency of all turbines'))
+        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', desc='yaw of each turbine'))
+
+        # Explicitly size output arrays
+        self.add('Ct_out', Array(np.zeros(nTurbines), iotype='out', dtype='float', \
+                                 desc='Thrust coefficient for all turbines'))
+        self.add('Cp_out', Array(np.zeros(nTurbines), iotype='out', dtype='float', \
+                                 desc='power coefficient for all turbines'))
 
     def execute(self):
 
@@ -86,26 +98,36 @@ class floris_windframe(Component):
     # original variables
     parameters = VarTree(FLORISParameters(), iotype='in')
     verbose = Bool(False, iotype='in', desc='verbosity of FLORIS, False is no output')
-    turbineX = Array(iotype='in', desc='x positions of turbines in original ref. frame')
-    turbineY = Array(iotype='in', desc='y positions of turbines in original ref. frame')
-
-    # variables for verbosity
-    Ct = Array(iotype='in', deriv_ignore='true', dtype='float')
-    Cp = Array(iotype='in', deriv_ignore='true', dtype='float', desc='power coefficient for all turbines')
-    axialInduction = Array(iotype='in', dtype='float', desc='axial induction of all turbines')
-    yaw = Array(iotype='in', deriv_ignore=True, desc='yaw of each turbine')
-
-    # variables for testing wind speed at various locations
-    ws_position = Array(iotype='in', units='m', deriv_ignore=True, desc='position of desired measurements in original ref. frame')
-    wsw_position = Array(iotype='out', units='m', deriv_ignore=True, desc='position of desired measurements in wind ref. frame')
 
     # flow property variables
     wind_speed = Float(iotype='in', units='m/s', desc='free stream wind velocity')
     wind_direction = Float(iotype='in', units='deg', desc='overall wind direction for wind farm')
 
-    # for testing purposes only
-    turbineXw = Array(iotype='out', units='m', desc='x coordinates of turbines in wind dir. ref. frame')
-    turbineYw = Array(iotype='out', units='m', desc='y coordinates of turbines in wind dir. ref. frame')
+
+    def __init__(self, nTurbines, resolution):
+
+        super(floris_windframe, self).__init__()
+
+        # Explicitly size input arrays
+        self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', desc='x positions of turbines in original ref. frame')
+        self.add('turbineY', Array(np.zeros(nTurbines), iotype='in', desc='y positions of turbines in original ref. frame')
+
+        # variables for verbosity
+        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', deriv_ignore='true', dtype='float')
+        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', deriv_ignore='true', dtype='float', desc='power coefficient for all turbines')
+        self.add('axialInduction', Array(np.zeros(nTurbines), iotype='in', dtype='float', desc='axial induction of all turbines')
+        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', deriv_ignore=True, desc='yaw of each turbine')
+
+        # variables for testing wind speed at various locations
+        self.add('ws_position', Array(np.zeros(resolution*resolution), iotype='in', units='m', deriv_ignore=True, desc='position of desired measurements in original ref. frame')
+
+        # Explicitly size output arrays
+        self.add('wsw_position', Array(np.zeros(resolution*resolution), iotype='out', units='m', deriv_ignore=True, desc='position of desired measurements in wind ref. frame')
+
+        # for testing purposes only
+        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='out', units='m', desc='x coordinates of turbines in wind dir. ref. frame')
+        self.add('turbineYw', Array(np.zeros(nTurbines), iotype='out', units='m', desc='y coordinates of turbines in wind dir. ref. frame')
+
 
     def execute(self):
 

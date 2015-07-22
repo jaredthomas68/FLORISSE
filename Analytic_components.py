@@ -109,24 +109,34 @@ class floris_windframe(Component):
         super(floris_windframe, self).__init__()
 
         # Explicitly size input arrays
-        self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', desc='x positions of turbines in original ref. frame')
-        self.add('turbineY', Array(np.zeros(nTurbines), iotype='in', desc='y positions of turbines in original ref. frame')
+        self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', \
+                                   desc='x positions of turbines in original ref. frame'))
+        self.add('turbineY', Array(np.zeros(nTurbines), iotype='in', \
+                                   desc='y positions of turbines in original ref. frame'))
 
         # variables for verbosity
-        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', deriv_ignore='true', dtype='float')
-        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', deriv_ignore='true', dtype='float', desc='power coefficient for all turbines')
-        self.add('axialInduction', Array(np.zeros(nTurbines), iotype='in', dtype='float', desc='axial induction of all turbines')
-        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', deriv_ignore=True, desc='yaw of each turbine')
+        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', deriv_ignore='true', \
+                             dtype='float'))
+        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', deriv_ignore='true', \
+                             dtype='float', desc='power coefficient for all turbines'))
+        self.add('axialInduction', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                                         desc='axial induction of all turbines'))
+        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', deriv_ignore=True, \
+                              desc='yaw of each turbine'))
 
         # variables for testing wind speed at various locations
-        self.add('ws_position', Array(np.zeros(resolution*resolution), iotype='in', units='m', deriv_ignore=True, desc='position of desired measurements in original ref. frame')
+        self.add('ws_position', Array(np.zeros(resolution*resolution), iotype='in', units='m', deriv_ignore=True, \
+                                      desc='position of desired measurements in original ref. frame'))
 
         # Explicitly size output arrays
-        self.add('wsw_position', Array(np.zeros(resolution*resolution), iotype='out', units='m', deriv_ignore=True, desc='position of desired measurements in wind ref. frame')
+        self.add('wsw_position', Array(np.zeros(resolution*resolution), iotype='out', units='m', deriv_ignore=True, \
+                                       desc='position of desired measurements in wind ref. frame'))
 
         # for testing purposes only
-        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='out', units='m', desc='x coordinates of turbines in wind dir. ref. frame')
-        self.add('turbineYw', Array(np.zeros(nTurbines), iotype='out', units='m', desc='y coordinates of turbines in wind dir. ref. frame')
+        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='out', units='m', \
+                                    desc='x coordinates of turbines in wind dir. ref. frame'))
+        self.add('turbineYw', Array(np.zeros(nTurbines), iotype='out', units='m', \
+                                    desc='y coordinates of turbines in wind dir. ref. frame'))
 
 
     def execute(self):

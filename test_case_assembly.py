@@ -86,8 +86,8 @@ class floris_assembly_opt(Assembly):
         # added for optimization testing
         # self.add('driver', SLSQPdriver())
         self.add('driver', pyOptDriver())
-        self.driver.optimizer = 'SNOPT'
-        self.driver.iprint = 3
+        self.driver.optimizer = 'SLSQP'
+        self.driver.iprint = 1
         self.driver.accuracy = 1.0e-12
         self.driver.maxiter = 100
         self.driver.add_objective('-floris_power.power')

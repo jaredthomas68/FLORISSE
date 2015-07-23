@@ -12,26 +12,47 @@ class floris_windframe(Component):
     verbose = Bool(False, iotype='in', desc='verbosity of FLORIS, False is no output')
     # position = Array(iotype='in', units='m', desc='position of turbines in original ref. frame')
 
-
-    # variables for verbosity
-    Ct = Array(iotype='in', dtype='float')
-    Cp = Array(iotype='in', dtype='float', desc='power coefficient for all turbines')
-    axialInduction = Array(iotype='in', dtype='float', desc='axial induction of all turbines')
-    # yaw = Array(iotype='in', desc='yaw of each turbine')
-
-    # variables for testing wind speed at various locations
-    ws_position = Array(iotype='in', units='m', desc='position of desired measurements in original ref. frame')
-    wsw_position = Array(iotype='out', units='m', desc='position of desired measurements in wind ref. frame')
-
-    # flow property variables
     wind_speed = Float(iotype='in', units='m/s', desc='free stream wind velocity')
     wind_direction = Float(iotype='in', units='deg', desc='overall wind direction for wind farm')
-    turbineX = Array(iotype='in', units='m', desc='x coordinates of turbines in wind dir. ref. frame')
-    turbineY = Array(iotype='in', units='m', desc='y coordinates of turbines in wind dir. ref. frame')
 
-    # for testing purposes only
-    turbineXw = Array(iotype='out', units='m', desc='x coordinates of turbines in wind dir. ref. frame')
-    turbineYw = Array(iotype='out', units='m', desc='y coordinates of turbines in wind dir. ref. frame')
+    def __init__(self, nTurbines, resolution):
+
+        super(floris_windframe, self).__init__()
+
+        # Explicitly size input arrays
+        self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', \
+                                   desc='x positions of turbines in original ref. frame'))
+        self.add('turbineY', Array(np.zeros(nTurbines), iotype='in', \
+                                   desc='y positions of turbines in original ref. frame'))
+
+        # variables for verbosity
+        self.add('Ct', Array(np.zeros(nTurbines), iotype='in'))
+        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', \
+                             desc='power coefficient for all turbines'))
+        self.add('axialInduction', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                                         desc='axial induction of all turbines'))
+        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', \
+                              desc='yaw of each turbine'))
+
+        # variables for testing wind speed at various locations
+        self.add('ws_position', Array(np.zeros(resolution*resolution), iotype='in', units='m', \
+                                      desc='position of desired measurements in original ref. frame'))
+
+        # Explicitly size output arrays
+        self.add('wsw_position', Array(np.zeros([2, resolution*resolution]), iotype='out', units='m', \
+                                       desc='position of desired measurements in wind ref. frame'))
+
+        # for testing purposes only
+        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='out', units='m', \
+                                    desc='x coordinates of turbines in wind dir. ref. frame'))
+        self.add('turbineYw', Array(np.zeros(nTurbines), iotype='out', units='m', \
+                                    desc='y coordinates of turbines in wind dir. ref. frame'))
+
+
+        # variables for testing wind speed at various locations
+        self.add('ws_position', Array(np.zeros([resolution*resolution, 2]), iotype='in', units='m', desc='position of desired measurements in original ref. frame'))
+        self.add('wsw_position', Array(np.zeros([resolution*resolution]), iotype='out', units='m', desc='position of desired measurements in wind ref. frame'))
+
 
     def execute(self):
 
@@ -100,18 +121,31 @@ class floris_wcent_wdiam(Component):
 
     parameters = VarTree(FLORISParameters(), iotype='in')
     verbose = Bool(False, iotype='in', desc='verbosity of FLORIS, False is no output')
-    turbineXw = Array(iotype='in', desc='x coordinates of turbines in wind dir. ref. frame')
-    turbineYw = Array(iotype='in', desc='y coordinates of turbines in wind dir. ref. frame')
-    yaw = Array(iotype='in', desc='yaw of each turbine')
-    rotorDiameter = Array(dtype='float', iotype='in', desc='rotor diameter of each turbine')
-    Ct = Array(iotype='in', dtype='float', desc='thrust coefficient of each turbine')
 
-    wsw_position = Array(iotype='in', units='m', desc='positions where measurements are desired in the windframe')
+    def __init__(self, nTurbines, resolution):
+        super(floris_wcent_wdiam, self).__init__()
 
-    wakeCentersYT = Array(iotype='out', dtype='float', desc='wake center y position at each turbine')
-    wakeDiametersT = Array(iotype='out', dtype='float', desc='wake diameter of each zone of each wake at each turbine')
-    wakeDiameters = Array(iotype='out', dtype='float', desc='wake diameter of each zone of each wake at each turbine')
-    wakeCentersY = Array(iotype='out', units='m', desc='Y positions of wakes at measurement points')
+        # Explicitly size input arrays
+        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='in', \
+                                    desc='x coordinates of turbines in wind dir. ref. frame'))
+        self.add('turbineYw', Array(np.zeros(nTurbines), iotype='in', \
+                                    desc='y coordinates of turbines in wind dir. ref. frame'))
+        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', desc='yaw of each turbine'))
+        self.add('rotorDiameter', Array(np.zeros(nTurbines), dtype='float', iotype='in', \
+                                        desc='rotor diameter of each turbine'))
+        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                             desc='thrust coefficient of each turbine'))
+
+        self.add('wsw_position', Array(np.zeros([2, nTurbines*nTurbines]), iotype='in', units='m', desc='positions where measurements are desired in the windframe'))
+
+
+        # Explicitly size output arrays
+        self.add('wakeCentersYT', Array(np.zeros(nTurbines*nTurbines), iotype='out', dtype='float', \
+                                        desc='wake center y position at each turbine'))
+        self.add('wakeDiametersT', Array(np.zeros(nTurbines*nTurbines*3), iotype='out', dtype='float', \
+                                         desc='wake diameter of each zone of each wake at each turbine'))
+        self.add('wakeDiameters', Array(np.zeros([resolution*resolution, nTurbines, 3]), iotype='out', dtype='float', desc='wake diameter of each zone of each wake at each turbine'))
+        self.add('wakeCentersY', Array(np.zeros([resolution*resolution, nTurbines]), iotype='out', units='m', desc='Y positions of wakes at measurement points'))
 
     def execute(self):
 
@@ -204,14 +238,26 @@ class floris_wcent_wdiam(Component):
 
 class floris_overlap(Component):
     """ Calculates the overlap between each turbine rotor and the existing turbine wakes """
-    turbineXw = Array(iotype='in', units='m', desc='X positions of turbines wrt the wind direction')
-    turbineYw = Array(iotype='in', units='m', desc='Y positions of turbines wrt the wind direction')
-    rotorDiameter = Array(iotype='in', units='m', desc='diameters of all turbine rotors')
-    wakeDiametersT = Array(iotype='in', units='m', desc='diameters of all turbines wake zones')
-    wakeCentersYT = Array(iotype='in', units='m', desc='Y positions of all wakes at each turbine')
-    rotorArea = Array(iotype='in', units='m*m', desc='Area of each turbine rotor')
 
-    wakeOverlapTRel = Array(iotype='out', desc='relative wake zone overlap to rotor area')
+    def __init__(self, nTurbines):
+        super(floris_overlap, self).__init__()
+
+        # Explicitly size input arrays
+        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='in', units='m', ignore_deriv=True, \
+                                    desc='X positions of turbines wrt the wind direction'))
+        self.add('turbineYw', Array(np.zeros(nTurbines), iotype='in', units='m', \
+                                          desc='Y positions of turbines wrt the wind direction'))
+        self.add('rotorDiameter', Array(np.zeros(nTurbines), iotype='in', units='m', \
+                                              desc='diameters of all turbine rotors'))
+        self.add('wakeCentersYT', Array(np.zeros(nTurbines*nTurbines), iotype='in', units='m', \
+                                              desc='Y positions of all wakes at each turbine'))
+        self.add('wakeDiametersT', Array(np.zeros(nTurbines*nTurbines*3), iotype='in', units='m',\
+                                               desc='diameters of all turbines wake zones'))
+
+        # Explicitly size output arrays
+        self.add('wakeOverlapTRel', Array(np.zeros(nTurbines*nTurbines*3), iotype='out', \
+                                                desc='relative wake zone overlap to rotor area'))
+        self.add('rotorArea', Array(np.zeros(nTurbines), iotype='in', units='m*m', desc='Area of each turbine rotor'))
 
 
     def execute(self):
@@ -265,33 +311,54 @@ class floris_power(Component):
 
     # original variables in Pieter's OpenMDAO stand-alone version of FLORIS
     parameters = VarTree(FLORISParameters(), iotype='in')
-    velocitiesTurbines = Array(iotype='out', units='m/s')
     verbose = Bool(False, iotype='in', desc='verbosity of FLORIS, False is no output')
-
-    # input variables added so I don't have to use WISDEM while developing gradients
-    rotorDiameter = Array(dtype='float', iotype='in', units='m', desc='rotor diameters of all turbine')
-    rotorArea = Array(iotype='in', dtype='float', units='m*m', desc='rotor area of all turbines')
-    axialInduction = Array(iotype='in', dtype='float', desc='axial induction of all turbines')
-    Ct = Array(iotype='in', dtype='float', desc='Thrust coefficient for all turbines')
-    Cp = Array(iotype='in', dtype='float', desc='power coefficient for all turbines')
-    generator_efficiency = Array(iotype='in', dtype='float', desc='generator efficiency of all turbines')
-    yaw = Array(iotype='in', desc='yaw of each turbine')
-    turbineXw = Array(iotype='in', dtype='float', units='m', desc='X positions of turbines in the wind direction reference frame')
-    wakeCentersYT = Array(iotype='in', units='m', desc='centers of the wakes at each turbine')
-    wakeDiametersT = Array(iotype='in', units='m', desc='diameters of each of the wake zones for each of the wakes at each turbine')
-    wakeOverlapTRel = Array(iotype='in', units='m', desc='ratios of wake overlap area per zone to rotor area')
-    wsw_position = Array(iotype='in', units='m', desc='positions where measurements are desired in the windframe')
-    wakeDiameters = Array(iotype='in', units='m', desc='diameter of wake zones at measurement points')
-    wakeCentersY = Array(iotype='in', units='m', desc='Y positions of wakes at measurement points')
 
     # Flow property variables
     wind_speed = Float(iotype='in', units='m/s', desc='free stream wind velocity')
     air_density = Float(iotype='in', units='kg/(m*m*m)', desc='air density in free stream')
 
     # output variables added so I don't have to use WISDEM while developing gradients
-    wt_power = Array(iotype='out', units='kW')
     power = Float(iotype='out', units='kW', desc='total power output of the wind farm')
-    ws_array = Array(iotype='out', units='m/s', desc='wind speed at measurement locations')
+
+
+    def __init__(self, nTurbines, resolution):
+        super(floris_power, self).__init__()
+
+        # Explicitly size input arrays
+        # input variables added so I don't have to use WISDEM while developing gradients
+        self.add('rotorDiameter', Array(np.zeros(nTurbines), dtype='float', iotype='in', units='m', \
+                                        desc='rotor diameters of all turbine'))
+        self.add('axialInduction', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                                         desc='axial induction of all turbines'))
+        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                             desc='Thrust coefficient for all turbines'))
+        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                             desc='power coefficient for all turbines'))
+        self.add('generator_efficiency', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                                               desc='generator efficiency of all turbines'))
+        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='in', dtype='float', units='m', \
+                                    desc='X positions of turbines in the wind direction reference frame'))
+        self.add('wakeCentersYT',  Array(np.zeros([nTurbines, nTurbines]), iotype='in', units='m', \
+                                         desc='centers of the wakes at each turbine'))
+        self.add('wakeDiametersT', Array(np.zeros([nTurbines, nTurbines, 3]), iotype='in', units='m', \
+                                         desc='diameters of each of the wake zones for each of the wakes \
+                                         at each turbine'))
+        self.add('wakeOverlapTRel', Array(np.zeros([nTurbines, nTurbines, 3]), iotype='in', units='m', \
+                                          desc='ratios of wake overlap area per zone to rotor area'))
+        self.add('yaw', Array(np.zeros([nTurbines]), iotype='in'))
+        # input variables added so I don't have to use WISDEM while developing gradients
+        self.add('rotorArea', Array(np.zeros(nTurbines), iotype='in', dtype='float', units='m*m', desc='rotor area of all turbines'))
+        self.add('wsw_position', Array(np.zeros([2, resolution*resolution]), iotype='in', units='m', desc='positions where measurements are desired in the windframe'))
+        self.add('wakeDiameters', Array(np.zeros([resolution*resolution, nTurbines, 3]), iotype='in', units='m', desc='diameter of wake zones at measurement points'))
+        self.add('wakeCentersY', Array(np.zeros([resolution*resolution, nTurbines]), iotype='in', units='m', desc='Y positions of wakes at measurement points'))
+
+
+        # Explicitly size output arrays
+        self.add('velocitiesTurbines', Array(np.zeros(nTurbines), iotype='out', units='m/s'))
+        self.add('wt_power', Array(np.zeros(nTurbines), iotype='out', units='kW'))
+
+        self.add('ws_array', Array(np.zeros(resolution*resolution), iotype='out', units='m/s', desc='wind speed at measurement locations'))
+
 
     def execute(self):
 

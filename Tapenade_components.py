@@ -34,7 +34,7 @@ class floris_wcent_wdiam(Component):
 
     def execute(self):
 
-        # print 'entering wcent_wdiam - tapenade'
+        print 'entering wcent_wdiam - tapenade'
 
         # rename inputs and outputs
         # pP = self.parameters.pP
@@ -131,7 +131,7 @@ class floris_overlap(Component):
         super(floris_overlap, self).__init__()
 
         # Explicitly size input arrays
-        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='in', units='m', deriv_ignore=True, \
+        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='in', units='m', ignore_deriv=True, \
                                     desc='X positions of turbines wrt the wind direction'))
         self.add('turbineYw', Array(np.zeros(nTurbines), iotype='in', units='m', \
                                           desc='Y positions of turbines wrt the wind direction'))
@@ -149,12 +149,14 @@ class floris_overlap(Component):
 
     def execute(self):
 
-       # call to fortran code to obtain relative wake overlap values
-       wakeOverlapTRel_vec = _floris.floris_overlap(self.turbineXw, self.turbineYw, self.rotorDiameter, \
+        print 'entering overlap - Tapenade'
+
+        # call to fortran code to obtain relative wake overlap values
+        wakeOverlapTRel_vec = _floris.floris_overlap(self.turbineXw, self.turbineYw, self.rotorDiameter, \
                                                      self.wakeDiametersT, self.wakeCentersYT)
 
-       # pass results to self in the form of a vector for use in Jacobian creation
-       self.wakeOverlapTRel = wakeOverlapTRel_vec
+        # pass results to self in the form of a vector for use in Jacobian creation
+        self.wakeOverlapTRel = wakeOverlapTRel_vec
 
     def list_deriv_vars(self):
         """specifies the inputs and outputs where derivatives are defined"""
@@ -236,7 +238,7 @@ class floris_power(Component):
         self.add('wt_power', Array(np.zeros(nTurbines), iotype='out', units='kW'))
 
     def execute(self):
-        # print 'entering power - tapenade'
+        print 'entering power - tapenade'
 
         # reassign input variables
         wakeOverlapTRel_v = self.wakeOverlapTRel

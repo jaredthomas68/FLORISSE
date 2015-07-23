@@ -1,5 +1,5 @@
 # from openmdao.main.api import Assembly
-from test_case_assembly import floris_assembly_opt
+from test_case_assembly import floris_assembly_opt, floris_assembly_opt_AEP
 from FLORIS_visualization import floris_assembly
 # from FLORIS_components import floris_assembly as vis_assembly
 import time
@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
 
     rotor_diameter = 126.4
-    nRows = 3
+    nRows = 2
     spacing = 7
 
     # windrose for test case from Pieter
@@ -39,8 +39,8 @@ if __name__ == "__main__":
     print turbineX.size, turbineX
     print turbineY.size, turbineY
 
-    # turbineX = np.array([1164.7, 947.2,  1682.4, 1464.9, 1982.6, 2200.1])
-    # turbineY = np.array([1024.7, 1335.3, 1387.2, 1697.8, 2060.3, 1749.7])
+    turbineX = np.array([1164.7, 947.2,  1682.4, 1464.9, 1982.6, 2200.1])
+    turbineY = np.array([1024.7, 1335.3, 1387.2, 1697.8, 2060.3, 1749.7])
 
     nTurbs = turbineX.size
     position = np.zeros([nTurbs, 2])
@@ -72,8 +72,8 @@ if __name__ == "__main__":
         yaw[turbI] = 0.
         # yaw[turbI] = 0
 
-    # myFloris = floris_assembly_opt(turbineX, turbineY, yaw, resolution=0)
-    myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=2)
+    myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=0)
+    # myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=len(dirPercent), resolution=2.0)
 
     # myFloris.position = position
     myFloris.turbineX = turbineX
@@ -89,9 +89,10 @@ if __name__ == "__main__":
     # myFloris.yaw = yaw
 
     # Define flow properties
+    myFloris.windrose_frequencies = dirPercent  # cw from north using direction from (standard windrose style)
     myFloris.wind_speed = 8.0  # m/s
     myFloris.air_density = 1.1716  # kg/m^3
-    myFloris.wind_direction = 30.  # deg
+    myFloris.wind_direction = 30.  # deg ccw from east using direction too
     myFloris.verbose = False
 
     myFloris.parameters.CPcorrected = False
@@ -114,86 +115,89 @@ if __name__ == "__main__":
     print('FLORIS Opt. calculation took %.03f sec.' % (toc-tic))
 
     # Display returns
-    # print 'turbine powers (kW): %s' % myFloris2.wt_power
-    # print 'turbine powers (kW): %s' % myFloris2.wt_power
     print 'turbine powers (kW): %s' % myFloris.wt_power
-    print 'turbine X positions in wind frame (m): %s' % myFloris.floris_windframe.turbineX
-    print 'turbine Y positions in wind frame (m): %s' % myFloris.floris_windframe.turbineY
-    # print 'yaw (deg) = ', myFloris.yaw
-    print 'yaw (deg) = ', myFloris.floris_adjustCtCp.yaw
+    # print 'turbine powers (kW): %s' % myFloris2.wt_power
+    # print 'turbine powers (kW): %s' % myFloris.wt_power_directions
+    print 'turbine X positions in wind frame (m): %s' % myFloris.turbineX
+    print 'turbine Y positions in wind frame (m): %s' % myFloris.turbineY
+    print 'yaw (deg) = ', myFloris.yaw
     # print 'yaw (deg) = ', myFloris.floris_adjustCtCp.yaw
-    print 'effective wind speeds (m/s): %s' % myFloris.floris_power.velocitiesTurbines
+    # print 'yaw (deg) = ', myFloris.floris_adjustCtCp.yaw
+    print 'effective wind speeds (m/s): %s' % myFloris.velocitiesTurbines
+    # print 'effective wind speeds (m/s): %s' % myFloris.velocitiesTurbines_directions
     # print 'Wake center Y positions (m): %s' % myFloris2.wakeCentersYT
     # print 'Wake diameters (m): %s' % myFloris2.wakeDiametersT
     # print 'Relative wake overlap (m*m): %s' % myFloris2.wakeOverlapTRel
     print 'wind farm power (kW): %s' % myFloris.power
+    # print 'wind farm power (kW): %s' % myFloris.power_directions
+    # print 'AEP (kWh): %s' % myFloris.AEP
 
-    # # windDirection = myFloris.wind_direction
-    # # rotationMatrix = np.array([(np.cos(windDirection), -np.sin(windDirection)),
-    # #                                (np.sin(windDirection), np.cos(windDirection))])
-    # # # print 'rotation matrix = ', rotationMatrix
-    # # turbinepos_opt = np.dot(rotationMatrix, np.array([myFloris.turbineXw, myFloris.turbineYw]))
-    # # print turbinepos_opt
-    # #
-    # myFloris2 = floris_assembly()
-    # myFloris2.turbineX = myFloris.floris_windframe.turbineX
-    # myFloris2.turbineY = myFloris.floris_windframe.turbineY
+    # windDirection = myFloris.wind_direction
+    # rotationMatrix = np.array([(np.cos(windDirection), -np.sin(windDirection)),
+    #                                (np.sin(windDirection), np.cos(windDirection))])
+    # # print 'rotation matrix = ', rotationMatrix
+    # turbinepos_opt = np.dot(rotationMatrix, np.array([myFloris.turbineXw, myFloris.turbineYw]))
+    # print turbinepos_opt
     #
-    # myFloris2.rotorDiameter = rotorDiameter
-    # myFloris2.rotorArea = np.pi*rotorDiameter*rotorDiameter/4.0
-    # myFloris2.axialInduction = axialInduction
-    # myFloris2.Ct = Ct
-    # myFloris2.Cp = Cp
-    # myFloris2.generator_efficiency = generator_efficiency
-    # myFloris2.yaw = myFloris.yaw
-    #
-    # # # Define flow properties
-    # myFloris2.wind_speed = myFloris.wind_speed # m/s
-    # myFloris2.air_density = myFloris.air_density  # kg/m^3
-    # myFloris2.wind_direction = myFloris.wind_direction  # deg
-    # # myFloris2.verbose = True
-    #
-    # myFloris2.parameters.CPcorrected = False
-    # myFloris2.parameters.CTcorrected = False
-    #
-    # # define sampling points for final visualization (GenericFlowModel)
-    # resolution = 200
-    # xlim = [0, np.max(myFloris.turbineX)+spacing*rotor_diameter]
-    # ylim = [0, np.max(myFloris.turbineY)+spacing*rotor_diameter]
-    # x = np.linspace(xlim[0], xlim[1], resolution)
-    # y = np.linspace(ylim[0], ylim[1], resolution)
-    # x, y = np.meshgrid(x, y)
-    # myFloris2.ws_position = np.array([x.flatten(), y.flatten()]).transpose()
-    # #print myFloris.ws_position
-    # # run model
-    # print 'start FLORIS Vis. run'
-    # tic = time.time()
-    # myFloris2.run()
-    # toc = time.time()
-    # print('FLORIS Vis. calculation took %.03f sec.' % (toc-tic))
-    #
-    #
-    #
-    # np.set_printoptions(linewidth=150, precision=4)
-    #
-    # # Display returns
-    # # print 'turbine powers (kW): %s' % myFloris2.wt_power
-    # # print 'turbine powers (kW): %s' % myFloris2.wt_power
+    resolution = 200
+    myFloris2 = floris_assembly(nTurbines=nTurbs, resolution=resolution)
+    myFloris2.turbineX = myFloris.floris_windframe.turbineX
+    myFloris2.turbineY = myFloris.floris_windframe.turbineY
+
+    myFloris2.rotorDiameter = rotorDiameter
+    myFloris2.rotorArea = np.pi*rotorDiameter*rotorDiameter/4.0
+    myFloris2.axialInduction = axialInduction
+    myFloris2.Ct = Ct
+    myFloris2.Cp = Cp
+    myFloris2.generator_efficiency = generator_efficiency
+    myFloris2.yaw = myFloris.yaw
+
+    # # Define flow properties
+    myFloris2.wind_speed = myFloris.wind_speed # m/s
+    myFloris2.air_density = myFloris.air_density  # kg/m^3
+    myFloris2.wind_direction = myFloris.wind_direction  # deg
+    # myFloris2.verbose = True
+
+    myFloris2.parameters.CPcorrected = False
+    myFloris2.parameters.CTcorrected = False
+
+    # define sampling points for final visualization (GenericFlowModel)
+    xlim = [0, np.max(myFloris.turbineX)+spacing*rotor_diameter]
+    ylim = [0, np.max(myFloris.turbineY)+spacing*rotor_diameter]
+    x = np.linspace(xlim[0], xlim[1], resolution)
+    y = np.linspace(ylim[0], ylim[1], resolution)
+    x, y = np.meshgrid(x, y)
+    myFloris2.ws_position = np.array([x.flatten(), y.flatten()]).transpose()
+    #print myFloris.ws_position
+    # run model
+    print 'start FLORIS Vis. run'
+    tic = time.time()
+    myFloris2.run()
+    toc = time.time()
+    print('FLORIS Vis. calculation took %.03f sec.' % (toc-tic))
+
+
+
+    np.set_printoptions(linewidth=150, precision=4)
+
+    # Display returns
     # print 'turbine powers (kW): %s' % myFloris2.wt_power
-    # # print 'turbine X positions in wind frame (m): %s' % myFloris2.turbineXw
-    # # print 'turbine Y positions in wind frame (m): %s' % myFloris2.turbineYw
-    # # print 'Wake center Y positions (m): %s' % myFloris2.wakeCentersYT
-    # # print 'Wake diameters (m): %s' % myFloris2.wakeDiametersT
-    # # print 'Relative wake overlap (m*m): %s' % myFloris2.wakeOverlapTRel
-    # print 'wind farm power (kW): %s' % myFloris2.power
-    # # print myFloris2.ws_array
-    # velocities = myFloris2.ws_array.reshape(resolution, resolution)
-    #
-    # import matplotlib.pyplot as plt
-    #
-    # fig, (ax1) = plt.subplots(nrows=1)
-    # im = ax1.pcolormesh(x, y, velocities, cmap='coolwarm')
-    # plt.colorbar(im, orientation='vertical')
-    # ax1.set_aspect('equal')
-    # ax1.autoscale(tight=True)
-    # plt.show()
+    # print 'turbine powers (kW): %s' % myFloris2.wt_power
+    print 'turbine powers (kW): %s' % myFloris2.wt_power
+    # print 'turbine X positions in wind frame (m): %s' % myFloris2.turbineXw
+    # print 'turbine Y positions in wind frame (m): %s' % myFloris2.turbineYw
+    # print 'Wake center Y positions (m): %s' % myFloris2.wakeCentersYT
+    # print 'Wake diameters (m): %s' % myFloris2.wakeDiametersT
+    # print 'Relative wake overlap (m*m): %s' % myFloris2.wakeOverlapTRel
+    print 'wind farm power (kW): %s' % myFloris2.power
+    # print myFloris2.ws_array
+    velocities = myFloris2.ws_array.reshape(resolution, resolution)
+
+    import matplotlib.pyplot as plt
+
+    fig, (ax1) = plt.subplots(nrows=1)
+    im = ax1.pcolormesh(x, y, velocities, cmap='coolwarm')
+    plt.colorbar(im, orientation='vertical')
+    ax1.set_aspect('equal')
+    ax1.autoscale(tight=True)
+    plt.show()

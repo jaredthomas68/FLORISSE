@@ -29,7 +29,7 @@ class floris_adjustCtCp(Component):
 
     def execute(self):
 
-        # print 'entering adjustCtCP - analytic'
+        print 'entering adjustCtCP - analytic'
 
         # print 'CTcorrected is', self.parameters.CTcorrected
         # print 'CPcorrected is', self.parameters.CPcorrected
@@ -115,20 +115,20 @@ class floris_windframe(Component):
                                    desc='y positions of turbines in original ref. frame'))
 
         # variables for verbosity
-        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', deriv_ignore=True))
-        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', missing_deriv_policy='assume_zero', \
+        self.add('Ct', Array(np.zeros(nTurbines), iotype='in'))
+        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', \
                              desc='power coefficient for all turbines'))
         self.add('axialInduction', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
                                          desc='axial induction of all turbines'))
-        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', deriv_ignore=True, \
+        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', \
                               desc='yaw of each turbine'))
 
         # variables for testing wind speed at various locations
-        self.add('ws_position', Array(np.zeros(resolution*resolution), iotype='in', units='m', deriv_ignore=True, \
+        self.add('ws_position', Array(np.zeros(resolution*resolution), iotype='in', units='m', \
                                       desc='position of desired measurements in original ref. frame'))
 
         # Explicitly size output arrays
-        self.add('wsw_position', Array(np.zeros(resolution*resolution), iotype='out', units='m', deriv_ignore=True, \
+        self.add('wsw_position', Array(np.zeros(resolution*resolution), iotype='out', units='m', \
                                        desc='position of desired measurements in wind ref. frame'))
 
         # for testing purposes only
@@ -140,7 +140,7 @@ class floris_windframe(Component):
 
     def execute(self):
 
-        # print 'entering windframe - analytic'
+        print 'entering windframe - analytic'
 
         Vinf = self.wind_speed
         windDirection = self.wind_direction*np.pi/180.0
@@ -310,22 +310,23 @@ class floris_AEP(Component):
     def __init__(self, nDirections):
         super(floris_AEP, self).__init__()
 
-        self.add('power_directions', Array(np.zeros(nDirections), iotype='in', units='kW', \
-                                           desc='vector containing the power production at each wind \
-                                           direction ccw from north'))
-        self.add('weight', Array(np.zeros(nDirections), iotype='in', units=None, \
-                                 desc='vector containing the weighted frequency of wind at each direction \
-                                 ccw from north'))
+        self.add('power_directions', Array(np.zeros(nDirections), iotype='in', units='kW', desc='vector containing \
+                                           the power production at each wind direction ccw from north'))
+        self.add('windrose_frequencies', Array(np.zeros(nDirections), iotype='in', desc='vector containing \
+                                               the weighted frequency of wind at each direction ccw from north'))
 
     def execute(self):
 
+        print 'entering AEP - analytic'
+
         power_directions = self.power_directions
-        weight = self.weight
+        windrose_frequencies = self.windrose_frequencies
+        print power_directions, windrose_frequencies
 
         # number of hours in a year
         hours = 8760.0
 
-        AEP = sum(power_directions*weight)*hours
+        AEP = sum(power_directions*windrose_frequencies)*hours
 
         self.AEP = AEP
 
@@ -335,13 +336,13 @@ class floris_AEP(Component):
 
     def provideJ(self):
 
-        weight = self.weight
-        ndirs = np.size(weight)
+        windrose_frequencies = self.windrose_frequencies
+        ndirs = np.size(windrose_frequencies)
 
         # number of hours in a year
         hours = 8760.0
 
-        dAEP_dpower = np.eye(ndirs)*weight*hours
+        dAEP_dpower = np.eye(ndirs)*windrose_frequencies*hours
 
         J = dAEP_dpower
 

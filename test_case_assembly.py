@@ -16,16 +16,194 @@ import numpy as np
 # ###########    imports for smooth model with analytic gradients    ##################################################
 from Analytic_components import floris_adjustCtCp
 from Analytic_components import floris_windframe
+from Analytic_components import floris_AEP
 
-# ###########    imports for Tapenade components    ###################################################################
+# ###########    imports for smooth model with Tapenade provided gradients    #########################################
 from Tapenade_components import floris_wcent_wdiam
 from Tapenade_components import floris_overlap
 from Tapenade_components import floris_power
 
-# ###########    imports for Fortran components (not gradient)    #####################################################
+# ###########    imports for Fortran components (no provided gradient)    #############################################
 # from Fortran_components import floris_wcent_wdiam
 # from Fortran_components import floris_overlap
 # from Fortran_components import floris_power
+
+
+class floris_assembly_opt_AEP(Assembly):
+    """ Defines the connections between each Component used in the FLORIS model """
+
+    # general input variables
+    parameters = VarTree(FLORISParameters(), iotype='in')
+    verbose = Bool(False, iotype='in', desc='verbosity of FLORIS, False is no output')
+
+    # Flow property variables
+    wind_speed = Float(iotype='in', units='m/s', desc='free stream wind velocity')
+    air_density = Float(iotype='in', units='kg/(m*m*m)', desc='air density in free stream')
+
+    # output
+    AEP = Float(iotype='out', units='kW', desc='total windfarm AEP')
+
+    # def __init__(self, turbineX, turbineY, yaw, resolution):
+    def __init__(self, nTurbines, nDirections, resolution=0):
+
+        super(floris_assembly_opt_AEP, self).__init__()
+
+        self.nTurbines = nTurbines
+        self.resolution = resolution
+        self.nDirections = nDirections
+        directions = np.arange(0.0, 360.0, 360.0/nDirections)
+
+        # Explicitly size input arrays
+
+        # wt_layout input variables
+        self.add('rotorDiameter', Array(np.zeros(nTurbines), dtype='float', iotype='in', units='m',
+                                        desc='rotor diameters of all turbine'))
+        self.add('axialInduction', Array(np.zeros(nTurbines), iotype='in', dtype='float',
+                                         desc='axial induction of all turbines'))
+        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', desc='Thrust coefficient for all turbines'))
+        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', dtype='float',
+                             desc='power coefficient for all turbines'))
+        self.add('generator_efficiency', Array(np.zeros(nTurbines), iotype='in', dtype='float',
+                                               desc='generator efficiency of all turbines'))
+        self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', dtype='float',
+                                   desc='x positions of turbines in original ref. frame'))
+        self.add('turbineY', Array(np.zeros(nTurbines), iotype='in', dtype='float',
+                                   desc='y positions of turbines in original ref. frame'))
+        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', dtype='float',
+                              desc='yaw of each turbine'))
+
+        # windrose input variables
+        self.add('windrose_frequencies', Array(np.zeros(nDirections), dtype='float', iotype='in',
+                                               desc='frequencies at each direction cw from north'))
+        self.add('windrose_directions', Array(directions, dtype='float', iotype='in',
+                                              desc='windrose directions in degrees cw from north'))
+
+
+        # Explicitly size output arrays
+
+        # variables added to test individual components
+        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='out', units='m',
+                                    desc='X positions of turbines in the wind direction reference frame'))
+        self.add('turbineYw', Array(np.zeros(nTurbines), iotype='out', units='m',
+                                    desc='Y positions of turbines in the wind direction reference frame'))
+        self.add('wakeCentersYT', Array(np.zeros(nTurbines), dtype='float', iotype='out', units='m',
+                                        desc='centers of the wakes at each turbine'))
+        self.add('wakeDiametersT', Array(np.zeros(nTurbines), dtype='float', iotype='out', units='m',
+                                         desc='diameters of each of the wake zones for each of the \
+                                         wakes at each turbine'))
+        self.add('wakeOverlapTRel', Array(np.zeros(nTurbines), dtype='float', iotype='out', units='m',
+                                          desc='ratio of overlap area of each zone to rotor area'))
+
+        # standard output
+        self.add('velocitiesTurbines_directions', Array(np.zeros([nDirections, nTurbines]), iotype='out', units='m/s',
+                                                        dtype='float', desc='effective windspeed at each turbine \
+                                                        in each direction cw from north using direction from'))
+        self.add('wt_power_directions', Array(np.zeros([nDirections, nTurbines]), iotype='out', units='kW',
+                                              dtype='float', desc='power of each turbine in each direction cw from \
+                                              north using direction from'))
+        self.add('power_directions', Array(np.zeros(nDirections), iotype='out', units='kW', desc='total windfarm power \
+                                           in each direction cw from north using direction from'))
+
+        # print 'end of init'
+    def configure(self):
+
+        # add driver so the workflow is not overwritten later
+        # self.add('driver', SLSQPdriver())
+        # self.driver.gradient_options.force_fd = True
+        # self.add('driver', pyOptDriver())
+        # self.driver.optimizer = 'SNOPT'
+        # self.driver.pyopt_diff = True
+
+        # add AEP component first so it can be connected to
+        self.add('floris_AEP', floris_AEP(nDirections=self.nDirections))
+        self.connect('windrose_frequencies', 'floris_AEP.windrose_frequencies')
+        self.connect('floris_AEP.AEP', 'AEP')
+
+        for i in range(0, self.nDirections):
+
+            # print 'i = %s' % i
+            # print self.nDirections
+
+            # add components to floris assembly
+            self.add('floris_adjustCtCp_%d' % i, floris_adjustCtCp(nTurbines=self.nTurbines))
+            self.add('floris_windframe_%d' % i, floris_windframe(nTurbines=self.nTurbines,
+                                                                              resolution=self.resolution))
+            self.add('floris_wcent_wdiam_%d' % i, floris_wcent_wdiam(nTurbines=self.nTurbines))
+            self.add('floris_overlap_%d' % i, floris_overlap(nTurbines=self.nTurbines))
+            self.add('floris_power_%d' % i, floris_power(nTurbines=self.nTurbines))
+
+            # connect inputs to components
+            self.connect('parameters', ['floris_adjustCtCp_%d.parameters' % i, 'floris_wcent_wdiam_%d.parameters' % i,
+                                        'floris_power_%d.parameters' % i])
+            self.connect('verbose', ['floris_windframe_%d.verbose' % i, 'floris_wcent_wdiam_%d.verbose' % i,
+                                     'floris_power_%d.verbose' % i])
+            self.connect('turbineX', 'floris_windframe_%d.turbineX' % i)
+            self.connect('turbineY', 'floris_windframe_%d.turbineY' % i)
+            self.connect('rotorDiameter', ['floris_wcent_wdiam_%d.rotorDiameter' % i,
+                                           'floris_overlap_%d.rotorDiameter' % i, 'floris_power_%d.rotorDiameter' % i])
+            self.connect('axialInduction', 'floris_power_%d.axialInduction' % i)
+            self.connect('Ct', 'floris_adjustCtCp_%d.Ct_in' % i)
+            self.connect('Cp', 'floris_adjustCtCp_%d.Cp_in' % i)
+            self.connect('generator_efficiency', 'floris_power_%d.generator_efficiency' % i)
+            self.connect('yaw', ['floris_adjustCtCp_%d.yaw' % i, 'floris_wcent_wdiam_%d.yaw' % i])
+            self.connect('wind_speed', 'floris_power_%d.wind_speed' % i)
+            self.connect('air_density', 'floris_power_%d.air_density' % i)
+            self.connect('windrose_directions[%d]' % i, 'floris_windframe_%d.wind_direction' % i)
+
+            # for satisfying the verbosity in windframe
+            self.connect('yaw', 'floris_windframe_%d.yaw' % i)
+            self.connect('floris_adjustCtCp_%d.Ct_out' % i, 'floris_windframe_%d.Ct' % i)
+            self.connect('floris_adjustCtCp_%d.Cp_out' % i, 'floris_windframe_%d.Cp' % i)
+            self.connect('wind_speed', 'floris_windframe_%d.wind_speed' % i)
+            self.connect('axialInduction', 'floris_windframe_%d.axialInduction' % i)
+
+            # ############### Connections between components ##################
+            # connections from CtCp adjustment to others
+            self.connect('floris_adjustCtCp_%d.Ct_out' % i, ['floris_wcent_wdiam_%d.Ct' % i, 'floris_power_%d.Ct' % i])
+            self.connect('floris_adjustCtCp_%d.Cp_out' % i, 'floris_power_%d.Cp' % i)
+
+
+            # connections from floris_windframe to floris_wcent_wdiam
+            self.connect('floris_windframe_%d.turbineXw' % i, 'floris_wcent_wdiam_%d.turbineXw' % i)
+            self.connect('floris_windframe_%d.turbineYw' % i, 'floris_wcent_wdiam_%d.turbineYw' % i)
+
+            # connections from floris_wcent_wdiam to floris_overlap
+            self.connect('floris_wcent_wdiam_%d.wakeCentersYT' % i, 'floris_overlap_%d.wakeCentersYT' % i)
+            self.connect('floris_wcent_wdiam_%d.wakeDiametersT' % i, 'floris_overlap_%d.wakeDiametersT' % i)
+
+            # connections from floris_windframe to floris_overlap
+            self.connect('floris_windframe_%d.turbineXw' % i, 'floris_overlap_%d.turbineXw' % i)
+            self.connect('floris_windframe_%d.turbineYw' % i, 'floris_overlap_%d.turbineYw' % i)
+
+            # connections from floris_windframe to floris_power
+            self.connect('floris_windframe_%d.turbineXw' % i, 'floris_power_%d.turbineXw' % i)
+
+            # connections from floris_overlap to floris_power
+            self.connect('floris_overlap_%d.wakeOverlapTRel' % i, 'floris_power_%d.wakeOverlapTRel' % i)
+            # #################################################################
+
+            # output connections
+            self.connect('floris_power_%d.velocitiesTurbines' % i, 'velocitiesTurbines_directions[%d, :]' % i)
+            self.connect('floris_power_%d.wt_power' % i, 'wt_power_directions[%d, :]' % i)
+            self.connect('floris_power_%d.power' % i, ['power_directions[%d]' % i, 'floris_AEP.power_directions[%d]' % i])
+
+            # add to workflow
+            self.driver.workflow.add(['floris_adjustCtCp_%d' % i, 'floris_windframe_%d' % i,
+                                      'floris_wcent_wdiam_%d' % i, 'floris_overlap_%d' % i, 'floris_power_%d' % i])
+
+        # print 'finished loop'
+        # add AEP calculations to workflow
+        self.driver.workflow.add(['floris_AEP'])
+        # print 'workflow added'
+        # set up driver
+        # self.driver.iprint = 1
+        # self.driver.accuracy = 1.0e-12
+        # self.driver.maxiter = 100
+        # self.driver.add_objective('-floris_power.power')
+        # self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
+        # self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
+        # self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
+
 
 class floris_assembly_opt(Assembly):
     """ Defines the connections between each Component used in the FLORIS model """
@@ -93,17 +271,19 @@ class floris_assembly_opt(Assembly):
         # add driver so the workflow is not overwritten later
         # self.add('driver', SLSQPdriver())
         # self.driver.gradient_options.force_fd = True
-        self.add('driver', pyOptDriver())
-        self.driver.optimizer = 'SNOPT'
-        self.driver.pyopt_diff = True
+        # self.add('driver', pyOptDriver())
+        # self.driver.optimizer = 'SNOPT'
+        # self.driver.pyopt_diff = True
 
 
         # add components to floris assembly
-        self.add('floris_adjustCtCp', floris_adjustCtCp(nTurbines=self.nTurbines))
-        self.add('floris_windframe', floris_windframe(nTurbines=self.nTurbines, resolution=self.resolution))
-        self.add('floris_wcent_wdiam', floris_wcent_wdiam(nTurbines=self.nTurbines))
-        self.add('floris_overlap', floris_overlap(nTurbines=self.nTurbines))
-        self.add('floris_power', floris_power(nTurbines=self.nTurbines))
+        F1 = self.add('floris_adjustCtCp', floris_adjustCtCp(nTurbines=self.nTurbines))
+        F2 = self.add('floris_windframe', floris_windframe(nTurbines=self.nTurbines, resolution=self.resolution))
+        F2.missing_deriv_policy = 'assume_zero'
+        F3 = self.add('floris_wcent_wdiam', floris_wcent_wdiam(nTurbines=self.nTurbines))
+        F4 = self.add('floris_overlap', floris_overlap(nTurbines=self.nTurbines))
+        F4.missing_deriv_policy = 'assume_zero'
+        F5 = self.add('floris_power', floris_power(nTurbines=self.nTurbines))
 
 
 
@@ -172,12 +352,12 @@ class floris_assembly_opt(Assembly):
         self.connect("floris_overlap.wakeOverlapTRel", "wakeOverlapTRel")
 
         # set up driver
-        self.driver.iprint = 1
-        self.driver.accuracy = 1.0e-12
-        self.driver.maxiter = 100
-        self.driver.add_objective('-floris_power.power')
-        self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
-        self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
+        # self.driver.iprint = 1
+        # self.driver.accuracy = 1.0e-12
+        # self.driver.maxiter = 100
+        # self.driver.add_objective('-floris_power.power')
+        # self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
+        # self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
         # self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
 
 
@@ -188,47 +368,64 @@ class floris_assembly(Assembly):
     parameters = VarTree(FLORISParameters(), iotype='in')
     verbose = Bool(False, iotype='in', desc='verbosity of FLORIS, False is no output')
 
-    # input variables added so I don't have to use WISDEM while developing gradients
-    # position = Array(iotype='in', desc='position of turbines in original ref. frame')
-    turbineX = Array(iotype='in', desc='x positions of turbines in original ref. frame')
-    turbineY = Array(iotype='in', desc='y positions of turbines in original ref. frame')
-    ws_position = Array(iotype='in', units='m', desc='position where you want measurements in ref. frame')
-    rotorDiameter = Array(dtype='float', iotype='in', units='m', desc='rotor diameters of all turbine')
-    rotorArea = Array(iotype='in', dtype='float', units='m*m', desc='rotor area of all turbines')
-    axialInduction = Array(iotype='in', dtype='float', desc='axial induction of all turbines')
-    Ct = Array(iotype='in', desc='Thrust coefficient for all turbines')
-    Cp = Array(iotype='in', dtype='float', desc='power coefficient for all turbines')
-    generator_efficiency = Array(iotype='in', dtype='float', desc='generator efficiency of all turbines')
-    yaw = Array(iotype='in', desc='yaw of each turbine')
-
-    # Flow property variables
-    wind_speed = Float(iotype='in', units='m/s', desc='free stream wind velocity')
-    air_density = Float(iotype='in', units='kg/(m*m*m)', desc='air density in free stream')
-    wind_direction = Float(iotype='in', units='deg', desc='overall wind direction for wind farm')
-
-    # original output variables in Pieter's OpenMDAO stand-alone version of FLORIS
-    velocitiesTurbines = Array(iotype='out', units='m/s')
-
-    # output variables added so I don't have to use WISDEM while developing gradients
-    wt_power = Array(iotype='out', units='kW')
-    ws_array = Array(iotype='out', units='m/s', desc='wind speed at measurement locations')
-
-    # variables added to test individual components
-    turbineXw = Array(iotype='out', units='m', desc='X positions of turbines in the wind direction reference frame')
-    turbineYw = Array(iotype='out', units='m', desc='Y positions of turbines in the wind direction reference frame')
-    wakeCentersYT = Array(dtype='float', iotype='out', units='m', desc='centers of the wakes at each turbine')
-    wakeDiametersT = Array(dtype='float', iotype='out', units='m', desc='diameters of each of the wake zones for each of the wakes at each turbine')
-    wakeOverlapTRel = Array(dtype='float', iotype='out', units='m', desc='ratio of overlap area of each zone to rotor area')
-
     # final output
     power = Float(iotype='out', units='kW', desc='total windfarm power')
 
+    def __init__(self, nTurbines, resolution):
+        super(floris_assembly, self).__init__()
+
+        self.nTurbines = nTurbines
+        self.resolution = resolution
+
+        # Explicitly size input arrays
+
+        # wt_layout input variables
+        self.add('rotorDiameter', Array(np.zeros(nTurbines), dtype='float', iotype='in', units='m', \
+                                        desc='rotor diameters of all turbine'))
+        self.add('axialInduction', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                                         desc='axial induction of all turbines'))
+        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', desc='Thrust coefficient for all turbines'))
+        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                             desc='power coefficient for all turbines'))
+        self.add('generator_efficiency', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                                               desc='generator efficiency of all turbines'))
+        self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                                   desc='x positions of turbines in original ref. frame'))
+        self.add('turbineY', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                                   desc='y positions of turbines in original ref. frame'))
+        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', dtype='float', \
+                              desc='yaw of each turbine'))
+
+        # visualization variables
+        self.add('ws_position', Array(np.zeros([resolution*resolution, 2]), iotype='in', units='m', desc='position where you want measurements in ref. frame'))
+
+
+        # Explicitly size output arrays
+
+        # variables added to test individual components
+        self.add('turbineXw', Array(np.zeros(nTurbines), iotype='out', units='m', \
+                                    desc='X positions of turbines in the wind direction reference frame'))
+        self.add('turbineYw', Array(np.zeros(nTurbines), iotype='out', units='m', \
+                                    desc='Y positions of turbines in the wind direction reference frame'))
+        self.add('wakeCentersYT', Array(np.zeros(nTurbines), dtype='float', iotype='out', units='m', \
+                                        desc='centers of the wakes at each turbine'))
+        self.add('wakeDiametersT', Array(np.zeros(nTurbines), dtype='float', iotype='out', units='m', \
+                                         desc='diameters of each of the wake zones for each of the wakes at each turbine'))
+        self.add('wakeOverlapTRel', Array(np.zeros(nTurbines), dtype='float', iotype='out', units='m', \
+                                          desc='ratio of overlap area of each zone to rotor area'))
+
+        # standard output
+        self.add('velocitiesTurbines', Array(np.zeros(nTurbines), iotype='out', units='m/s', dtype='float'))
+        self.add('wt_power', Array(np.zeros(nTurbines), iotype='out', units='kW', dtype='float'))
+
+        # visualization output
+        self.add('ws_array', Array(np.zeros([resolution*resolution, 2]), iotype='out', units='m/s', desc='wind speed at measurement locations'))
 
     def configure(self):
 
         # add components to floris assembly
-        self.add('floris_adjustCtCp', floris_adjustCtCp())
-        self.add('floris_windframe', floris_windframe())
+        self.add('floris_adjustCtCp', floris_adjustCtCp(self.nTurbines))
+        self.add('floris_windframe', floris_windframe(self.nTurbines, self.resolution))
         self.add('floris_wcent_wdiam', floris_wcent_wdiam())
         self.add('floris_overlap', floris_overlap())
         self.add('floris_power', floris_power())

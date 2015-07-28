@@ -44,15 +44,15 @@ class floris_assembly_opt_AEP(Assembly):
     AEP = Float(iotype='out', units='kW', desc='total windfarm AEP')
 
     # def __init__(self, turbineX, turbineY, yaw, resolution):
-    def __init__(self, nTurbines, nDirections, resolution=0):
+    def __init__(self, nTurbines, nDirections, resolution=0.):
 
         super(floris_assembly_opt_AEP, self).__init__()
 
         self.nTurbines = nTurbines
         self.resolution = resolution
         self.nDirections = nDirections
-        directions = np.arange(0.0, 360.0, 360.0/nDirections)
-
+        # directions = 270 - np.arange(0.0, 360.0, 360.0/nDirections)
+        # print directions
         # Explicitly size input arrays
 
         # wt_layout input variables
@@ -75,8 +75,8 @@ class floris_assembly_opt_AEP(Assembly):
         # windrose input variables
         self.add('windrose_frequencies', Array(np.zeros(nDirections), dtype='float', iotype='in',
                                                desc='frequencies at each direction cw from north'))
-        self.add('windrose_directions', Array(directions, dtype='float', iotype='in',
-                                              desc='windrose directions in degrees cw from north'))
+        self.add('windrose_directions', Array(np.zeros(nDirections), dtype='float', iotype='in',
+                                              desc='windrose directions in degrees ccw from east'))
 
 
         # Explicitly size output arrays
@@ -108,7 +108,7 @@ class floris_assembly_opt_AEP(Assembly):
     def configure(self):
 
         # add driver so the workflow is not overwritten later
-        # self.add('driver', SLSQPdriver())
+        self.add('driver', SLSQPdriver())
         # self.driver.gradient_options.force_fd = True
         # self.add('driver', pyOptDriver())
         # self.driver.optimizer = 'SNOPT'
@@ -119,9 +119,11 @@ class floris_assembly_opt_AEP(Assembly):
         self.connect('windrose_frequencies', 'floris_AEP.windrose_frequencies')
         self.connect('floris_AEP.AEP', 'AEP')
 
+        print 'in configure, diirections = ', self.windrose_directions
+
         for i in range(0, self.nDirections):
 
-            # print 'i = %s' % i
+            print 'i = %s' % i
             # print self.nDirections
 
             # add components to floris assembly
@@ -183,25 +185,26 @@ class floris_assembly_opt_AEP(Assembly):
             # #################################################################
 
             # output connections
-            self.connect('floris_power_%d.velocitiesTurbines' % i, 'velocitiesTurbines_directions[%d, :]' % i)
-            self.connect('floris_power_%d.wt_power' % i, 'wt_power_directions[%d, :]' % i)
-            self.connect('floris_power_%d.power' % i, ['power_directions[%d]' % i, 'floris_AEP.power_directions[%d]' % i])
+            self.connect('floris_power_%d.velocitiesTurbines[:]' % i, 'velocitiesTurbines_directions[%d, :]' % i)
+            self.connect('floris_power_%d.wt_power[:]' % i, 'wt_power_directions[%d, :]' % i)
+            self.connect('floris_power_%d.power' % i, 'floris_AEP.power_directions[%d]' % i)
 
             # add to workflow
             self.driver.workflow.add(['floris_adjustCtCp_%d' % i, 'floris_windframe_%d' % i,
                                       'floris_wcent_wdiam_%d' % i, 'floris_overlap_%d' % i, 'floris_power_%d' % i])
 
-        # print 'finished loop'
+        self.connect('floris_AEP.power_directions', 'power_directions')
+        print 'finished loop'
         # add AEP calculations to workflow
         self.driver.workflow.add(['floris_AEP'])
-        # print 'workflow added'
+        print 'workflow added'
         # set up driver
-        # self.driver.iprint = 1
-        # self.driver.accuracy = 1.0e-12
-        # self.driver.maxiter = 100
-        # self.driver.add_objective('-floris_power.power')
-        # self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
-        # self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
+        self.driver.iprint = 1
+        self.driver.accuracy = 1.0e-12
+        self.driver.maxiter = 100
+        self.driver.add_objective('-floris_AEP.AEP')
+        self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
+        self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
         # self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
 
 
@@ -271,8 +274,8 @@ class floris_assembly_opt(Assembly):
         # add driver so the workflow is not overwritten later
         # self.add('driver', SLSQPdriver())
         # self.driver.gradient_options.force_fd = True
-        # self.add('driver', pyOptDriver())
-        # self.driver.optimizer = 'SNOPT'
+        self.add('driver', pyOptDriver())
+        self.driver.optimizer = 'SNOPT'
         # self.driver.pyopt_diff = True
 
 
@@ -352,12 +355,12 @@ class floris_assembly_opt(Assembly):
         self.connect("floris_overlap.wakeOverlapTRel", "wakeOverlapTRel")
 
         # set up driver
-        # self.driver.iprint = 1
-        # self.driver.accuracy = 1.0e-12
-        # self.driver.maxiter = 100
-        # self.driver.add_objective('-floris_power.power')
-        # self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
-        # self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
+        self.driver.iprint = 1
+        self.driver.accuracy = 1.0e-12
+        self.driver.maxiter = 100
+        self.driver.add_objective('-floris_power.power')
+        self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
+        self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
         # self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
 
 

@@ -12,6 +12,10 @@ class floris_wcent_wdiam(Component):
     verbose = Bool(False, iotype='in', desc='verbosity of FLORIS, False is no output')
 
     def __init__(self, nTurbines):
+
+        # print 'entering wcent_wdiam __init__ - Tapenade'
+
+
         super(floris_wcent_wdiam, self).__init__()
 
         # Explicitly size input arrays
@@ -34,7 +38,7 @@ class floris_wcent_wdiam(Component):
 
     def execute(self):
 
-        print 'entering wcent_wdiam - tapenade'
+        # print 'entering wcent_wdiam - tapenade'
 
         # rename inputs and outputs
         # pP = self.parameters.pP
@@ -128,6 +132,9 @@ class floris_overlap(Component):
     """ Calculates the overlap between each turbine rotor and the existing turbine wakes """
 
     def __init__(self, nTurbines):
+
+        # print 'entering overlap __init__ - Tapenade'
+
         super(floris_overlap, self).__init__()
 
         # Explicitly size input arrays
@@ -149,7 +156,7 @@ class floris_overlap(Component):
 
     def execute(self):
 
-        print 'entering overlap - Tapenade'
+        # print 'entering overlap - Tapenade'
 
         # call to fortran code to obtain relative wake overlap values
         wakeOverlapTRel_vec = _floris.floris_overlap(self.turbineXw, self.turbineYw, self.rotorDiameter, \
@@ -209,7 +216,12 @@ class floris_power(Component):
     power = Float(iotype='out', units='kW', desc='total power output of the wind farm')
 
     def __init__(self, nTurbines):
+
+        # print 'entering power __init__ - Tapenade'
+
         super(floris_power, self).__init__()
+
+
 
         # Explicitly size input arrays
         # input variables added so I don't have to use WISDEM while developing gradients
@@ -238,7 +250,7 @@ class floris_power(Component):
         self.add('wt_power', Array(np.zeros(nTurbines), iotype='out', units='kW'))
 
     def execute(self):
-        print 'entering power - tapenade'
+        # print 'entering power - tapenade'
 
         # reassign input variables
         wakeOverlapTRel_v = self.wakeOverlapTRel

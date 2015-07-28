@@ -10,6 +10,9 @@ class floris_adjustCtCp(Component):
     parameters = VarTree(FLORISParameters(), iotype='in')
 
     def __init__(self, nTurbines):
+
+        # print 'entering adjustCtCp __init__ - analytic'
+
         super(floris_adjustCtCp, self).__init__()
 
         # Explicitly size input arrays
@@ -29,7 +32,7 @@ class floris_adjustCtCp(Component):
 
     def execute(self):
 
-        print 'entering adjustCtCP - analytic'
+        # print 'entering adjustCtCP - analytic'
 
         # print 'CTcorrected is', self.parameters.CTcorrected
         # print 'CPcorrected is', self.parameters.CPcorrected
@@ -106,6 +109,8 @@ class floris_windframe(Component):
 
     def __init__(self, nTurbines, resolution):
 
+        # print 'entering windframe __init__ - analytic'
+
         super(floris_windframe, self).__init__()
 
         # Explicitly size input arrays
@@ -140,7 +145,7 @@ class floris_windframe(Component):
 
     def execute(self):
 
-        print 'entering windframe - analytic'
+        # print 'entering windframe - analytic'
 
         Vinf = self.wind_speed
         windDirection = self.wind_direction*np.pi/180.0
@@ -308,33 +313,46 @@ class floris_AEP(Component):
     AEP = Float(iotype='out', units='kW', desc='total annual energy output of wind farm')
 
     def __init__(self, nDirections):
+
+        # print 'entering AEP __init__ - analytic'
+
         super(floris_AEP, self).__init__()
 
         self.add('power_directions', Array(np.zeros(nDirections), iotype='in', units='kW', desc='vector containing \
                                            the power production at each wind direction ccw from north'))
         self.add('windrose_frequencies', Array(np.zeros(nDirections), iotype='in', desc='vector containing \
-                                               the weighted frequency of wind at each direction ccw from north'))
+                                               the weighted frequency of wind at each direction ccw from east using \
+                                               direction too'))
 
     def execute(self):
 
         print 'entering AEP - analytic'
 
         power_directions = self.power_directions
+        # print 'power_directions assigned'
         windrose_frequencies = self.windrose_frequencies
-        print power_directions, windrose_frequencies
+        # print 'windrose_frequencies assigned'
+        # print power_directions, windrose_frequencies
 
         # number of hours in a year
         hours = 8760.0
 
         AEP = sum(power_directions*windrose_frequencies)*hours
+        # print 'AEP calculated'
 
         self.AEP = AEP
 
+        # print 'AEP passed to component'
+
     def list_deriv_vars(self):
+
+        # print 'entered list_deriv_vars()'
 
         return ('power_directions',), ('AEP',)
 
     def provideJ(self):
+
+        # print 'entering provideJ()'
 
         windrose_frequencies = self.windrose_frequencies
         ndirs = np.size(windrose_frequencies)
@@ -345,6 +363,8 @@ class floris_AEP(Component):
         dAEP_dpower = np.eye(ndirs)*windrose_frequencies*hours
 
         J = dAEP_dpower
+
+        # print 'J assigned'
 
         return J
 

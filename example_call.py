@@ -18,6 +18,20 @@ if __name__ == "__main__":
     turbineX = np.array([1164.7, 947.2,  1682.4, 1464.9, 1982.6, 2200.1])
     turbineY = np.array([1024.7, 1335.3, 1387.2, 1697.8, 2060.3, 1749.7])
 
+    # to make pics for Dr. Ning
+    rotor_diameter = 126.4
+    nRows = 2.
+    spacing = 3.
+    dirPercent = np.array([1])
+    nDirections = dirPercent.size
+    nDirections = len(dirPercent)
+    windDirs = np.array([0.])
+    turbineX = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
+    turbineY = np.array([1000, 1000])
+
+
+
+
     nTurbs = turbineX.size
     position = np.zeros([nTurbs, 2])
     rotorDiameter = np.zeros(nTurbs)

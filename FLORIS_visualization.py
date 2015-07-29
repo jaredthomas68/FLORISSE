@@ -11,35 +11,6 @@ from Original_components import floris_wcent_wdiam
 from Original_components import floris_overlap
 from Original_components import floris_power
 
-# ###########    imports for smooth model w/o gradients    ##############
-# from RegSmooth_components import floris_windframe
-# from RegSmooth_components import floris_wcent_wdiam
-# from RegSmooth_components import floris_overlap
-# from RegSmooth_components import floris_power
-
-# ###########    imports for smooth model with analytic gradients    ####
-# from Analytic_components import floris_windframe
-
-# ###########    imports for AlgoPy components    #######################
-# from AlgoPy_components import floris_windframe #-- not available
-# from AlgoPy_components import floris_wcent_wdiam #-- not available
-# from AlgoPy_components import floris_overlap #-- not available
-# from AlgoPy_components import floris_power #-- unfinished
-
-# ###########    imports for Tapenade components    #####################
-# from Tapenade_components import floris_windframe -- not available
-# from Tapenade_components import floris_wcent_wdiam
-# from Tapenade_components import floris_overlap
-# from Tapenade_components import floris_power # velocitiesTurbines gradients are incorrect
-#
-
-# ###########    imports for Fortran components (not gradient)    #####################
-# from Fortran_components import floris_windframe -- not available
-# from Fortran_components import floris_wcent_wdiam
-# from Fortran_components import floris_overlap
-# from Fortran_components import floris_power
-#figure_1b
-
 class floris_assembly_opt(Assembly):
     """ Defines the connections between each Component used in the FLORIS model """
     """ Defines the connections between each Component used in the FLORIS model """
@@ -268,13 +239,6 @@ class floris_assembly(Assembly):
 
         # add driver to floris assembly
         self.driver.workflow.add(['floris_windframe', 'floris_wcent_wdiam', 'floris_overlap', 'floris_power'])
-
-        # added for gradient testing
-        # self.add('driver', SLSQPdriver())
-        # self.driver.iprint = 0
-        # self.driver.add_objective('-floris_power.power')
-        # self.driver.add_parameter('floris_windframe.turbineX', low=0., high=3000.)
-        # self.driver.add_parameter('floris_windframe.turbineY', low=0., high=3000.)
 
         # connect inputs to components
         self.connect('parameters', ['floris_wcent_wdiam.parameters', 'floris_power.parameters'])

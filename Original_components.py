@@ -173,9 +173,8 @@ class floris_wcent_wdiam(Component):
         velX = self.wsw_position[0][:]
         nLocations = np.size(velX)
 
-
-        # if CTcorrected == False:
-        #     Ct = Ct * (np.cos(yaw)**2)
+        if CTcorrected == False:
+            Ct = Ct * (np.cos(yaw*np.pi/180.)**2)
 
         # calculate y-location of wake centers
         wakeCentersY = np.zeros((nLocations, nTurbines))
@@ -383,6 +382,8 @@ class floris_power(Component):
         keCorrCT = self.parameters.keCorrCT
         Region2CT = self.parameters.Region2CT
         CTcorrected = self.parameters.CTcorrected
+        CPcorrected = self.parameters.CPcorrected
+        pP = self.parameters.pP
         Ct = self.Ct
         Vinf = self.wind_speed
         turbineXw = self.turbineXw
@@ -404,8 +405,11 @@ class floris_power(Component):
 
         axialIndProvided = self.parameters.axialIndProvided
 
-        # if CTcorrected == False:
-        #     Ct = Ct * (np.cos(yaw)**2)
+        if CTcorrected == False:
+            Ct = Ct * (np.cos(yaw*np.pi/180.)**2)
+
+        if CPcorrected == False:
+            Cp = Cp*np.cos(yaw*np.pi/180.)**pP
 
         if axialIndProvided:
             axialInd = axialInduction
@@ -501,6 +505,7 @@ class floris_power(Component):
 
         self.power = np.sum(self.wt_power)
         # print'in power, ws_array is ', self.ws_array
+
 
 def CTtoAxialInd(CT):
     if CT > 0.96: # Glauert condition

@@ -108,10 +108,10 @@ class floris_assembly_opt_AEP(Assembly):
     def configure(self):
 
         # add driver so the workflow is not overwritten later
-        self.add('driver', SLSQPdriver())
+        # self.add('driver', SLSQPdriver())
         # self.driver.gradient_options.force_fd = True
-        # self.add('driver', pyOptDriver())
-        # self.driver.optimizer = 'SNOPT'
+        self.add('driver', pyOptDriver())
+        self.driver.optimizer = 'SNOPT'
         # self.driver.pyopt_diff = True
 
         # add AEP component first so it can be connected to
@@ -203,9 +203,9 @@ class floris_assembly_opt_AEP(Assembly):
         self.driver.accuracy = 1.0e-12
         self.driver.maxiter = 100
         self.driver.add_objective('-floris_AEP.AEP')
-        self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
-        self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
-        # self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
+        # self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
+        # self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
+        self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
 
 
 class floris_assembly_opt(Assembly):

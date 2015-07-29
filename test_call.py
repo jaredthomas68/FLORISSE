@@ -10,8 +10,8 @@ if __name__ == "__main__":
 
 
     rotor_diameter = 126.4
-    nRows = 1.
-    spacing = 7.
+    nRows = 2.
+    spacing = 3.
 
     # windrose for test case from Pieter
     windDirs = np.arange(0.0, 360.0, 5.0)
@@ -30,14 +30,21 @@ if __name__ == "__main__":
                0.0138723040032756,0.0134869622254069,0.0131224497328283,0.0127771221082802,0.0124495035926833,0.0121382660028662,
                0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
 
-    # dirPercent = np.array([0.1, 0.9])
+    # dirPercent = np.array([0.1, 0.3, 0.5, 0.1])
     nDirections = len(dirPercent)
 
     points = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
     xpoints, ypoints = np.meshgrid(points, points)
 
-    turbineX = np.ndarray.flatten(xpoints)
-    turbineY = np.ndarray.flatten(ypoints)
+    # turbineX = np.ndarray.flatten(xpoints)
+    # turbineY = np.ndarray.flatten(ypoints)
+
+    # to make pics for Dr. Ning
+    turbineX = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
+    turbineY = np.array([1000, 1000])
+    dirPercent = np.array([1])
+    nDirections = dirPercent.size
+    windDirs = np.array([270.])
 
     print turbineX.size, turbineX
     print turbineY.size, turbineY
@@ -72,7 +79,7 @@ if __name__ == "__main__":
         Ct[turbI] = 4.0*axialInduction[turbI]*(1.0-axialInduction[turbI])
         Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2.)
         generator_efficiency[turbI] = 0.944
-        yaw[turbI] = 0.
+        yaw[turbI] = 10.
         # yaw[turbI] = 0
 
     # myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=0)
@@ -98,7 +105,8 @@ if __name__ == "__main__":
     # myFloris.wind_direction = 30.  # deg ccw from east using direction too
     myFloris.verbose = False
 
-    myFloris.windrose_directions = 270 - np.arange(0.0, 360.0, 360.0/nDirections)
+    # myFloris.windrose_directions = 270 - np.arange(0.0, 360.0, 360.0/nDirections)
+    myFloris.windrose_directions = 270 - windDirs
     print myFloris.windrose_directions
     for i in range(0, nDirections):
         if myFloris.windrose_directions[i] < 0:

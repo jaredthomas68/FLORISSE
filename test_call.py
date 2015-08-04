@@ -10,41 +10,41 @@ if __name__ == "__main__":
 
 
     rotor_diameter = 126.4
-    nRows = 2.
+    nRows = 4.
     spacing = 3.
 
     # windrose for test case from Pieter
-    windDirs = np.arange(0.0, 360.0, 5.0)
+    # windDirs = np.arange(0.0, 360.0, 5.0)
 
-    dirPercent = np.array([ 0.0103304391513755,0.0101152216690551,0.0099087885737683,0.00971061280229294,
-               0.00952020862969896,0.00933712769451244,0.00916095547386126,0.00899130815027124,0.00882782982026631,
-               0.00867019000204726,0.00882782982026631,0.00899130815027124,0.00916095547386126,0.00933712769451244,
-               0.00952020862969896,0.00971061280229294,0.0099087885737683,0.0101152216690551,0.0103304391513755,
-               0.0105550139155358,0.0107895697803255,0.0110347872753329,0.0112914102352243,0.011560253336063,
-               0.0118422107345036,0.0121382660028662,0.0124495035926833,0.0127771221082802,0.0131224497328283,0.0134869622254069,
-               0.0138723040032756,0.0142803129445484,0.0147130497004438,0.0151728325035827,0.0156622787133757,0.0161843546704882,
-               0.0167424358660223,0.0173403800040945,0.0179826163005425,0.0186742553890249,0.0194212256045859,0.0202304433381103,
-               0.0211100278310716,0.0220695745506658,0.023120506672126,0.0242765320057323,0.023120506672126,0.0220695745506658,
-               0.0211100278310716,0.0202304433381103,0.0194212256045859,0.0186742553890249,0.0179826163005425,0.0173403800040945,
-               0.0167424358660223,0.0161843546704882,0.0156622787133757,0.0151728325035827,0.0147130497004438,0.0142803129445484,
-               0.0138723040032756,0.0134869622254069,0.0131224497328283,0.0127771221082802,0.0124495035926833,0.0121382660028662,
-               0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
+    # dirPercent = np.array([ 0.0103304391513755,0.0101152216690551,0.0099087885737683,0.00971061280229294,
+    #            0.00952020862969896,0.00933712769451244,0.00916095547386126,0.00899130815027124,0.00882782982026631,
+    #            0.00867019000204726,0.00882782982026631,0.00899130815027124,0.00916095547386126,0.00933712769451244,
+    #            0.00952020862969896,0.00971061280229294,0.0099087885737683,0.0101152216690551,0.0103304391513755,
+    #            0.0105550139155358,0.0107895697803255,0.0110347872753329,0.0112914102352243,0.011560253336063,
+    #            0.0118422107345036,0.0121382660028662,0.0124495035926833,0.0127771221082802,0.0131224497328283,0.0134869622254069,
+    #            0.0138723040032756,0.0142803129445484,0.0147130497004438,0.0151728325035827,0.0156622787133757,0.0161843546704882,
+    #            0.0167424358660223,0.0173403800040945,0.0179826163005425,0.0186742553890249,0.0194212256045859,0.0202304433381103,
+    #            0.0211100278310716,0.0220695745506658,0.023120506672126,0.0242765320057323,0.023120506672126,0.0220695745506658,
+    #            0.0211100278310716,0.0202304433381103,0.0194212256045859,0.0186742553890249,0.0179826163005425,0.0173403800040945,
+    #            0.0167424358660223,0.0161843546704882,0.0156622787133757,0.0151728325035827,0.0147130497004438,0.0142803129445484,
+    #            0.0138723040032756,0.0134869622254069,0.0131224497328283,0.0127771221082802,0.0124495035926833,0.0121382660028662,
+    #            0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
 
-    # dirPercent = np.array([0.1, 0.3, 0.5, 0.1])
+    dirPercent = np.array([1])
     nDirections = len(dirPercent)
 
     points = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
     xpoints, ypoints = np.meshgrid(points, points)
 
-    # turbineX = np.ndarray.flatten(xpoints)
-    # turbineY = np.ndarray.flatten(ypoints)
+    turbineX = np.ndarray.flatten(xpoints)
+    turbineY = np.ndarray.flatten(ypoints)
 
     # to make pics for Dr. Ning
-    turbineX = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
-    turbineY = np.array([1000, 1000])
-    dirPercent = np.array([1])
-    nDirections = dirPercent.size
-    windDirs = np.array([270.])
+    # turbineX = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
+    # turbineY = np.array([1000, 1000])
+    # dirPercent = np.array([1])
+    # nDirections = dirPercent.size
+    # windDirs = np.array([270.])
 
     print turbineX.size, turbineX
     print turbineY.size, turbineY
@@ -105,12 +105,13 @@ if __name__ == "__main__":
     # myFloris.wind_direction = 30.  # deg ccw from east using direction too
     myFloris.verbose = False
 
-    # myFloris.windrose_directions = 270 - np.arange(0.0, 360.0, 360.0/nDirections)
-    myFloris.windrose_directions = 270 - windDirs
+    myFloris.windrose_directions = 270 - np.arange(0.0, 360.0, 360.0/nDirections)
+    # myFloris.windrose_directions = 270 - windDirs
     print myFloris.windrose_directions
     for i in range(0, nDirections):
         if myFloris.windrose_directions[i] < 0:
-            myFloris.windrose_directions[i] = myFloris.windrose_directions[i] + 360
+            myFloris.windrose_directions[i] += 360
+
     myFloris.parameters.CPcorrected = False
     myFloris.parameters.CTcorrected = False
 
@@ -217,4 +218,14 @@ if __name__ == "__main__":
     plt.colorbar(im, orientation='vertical')
     ax1.set_aspect('equal')
     ax1.autoscale(tight=True)
+
+    for turbI in range(0, nTurbs):
+        dx = 0.5*rotorDiameter[turbI]*np.sin((yaw[turbI]+myFloris2.wind_direction)*np.pi/180)
+        dy = 0.5*rotorDiameter[turbI]*np.cos((yaw[turbI]+myFloris2.wind_direction)*np.pi/180)
+        plt.plot([turbineX[turbI]-dx, turbineX[turbI]+dx], [turbineY[turbI]+dy, turbineY[turbI]-dy],
+                 solid_capstyle='butt', lw=4, c='k')
+
+    plt.xlabel('Position (m)', labelpad=0)
+    plt.ylabel('Position (m)', labelpad=5)
+
     plt.show()

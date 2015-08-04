@@ -5,16 +5,26 @@ import numpy as np
 class FLORISParameters(VariableTree):
     """Container of FLORIS wake parameters"""
 
-    pP = Float(1.88, iotype='in')
-    ke = Float(0.065, iotype='in')
+    # old parameters
+    # pP = Float(1.88, iotype='in')
+    # ke = Float(0.065, iotype='in')
     keCorrArray = Float(0.0, iotype='in')
     keCorrCT = Float(0.0, iotype='in')
     Region2CT = Float(4.0*(1.0/3.0)*(1.0-(1.0/3.0)), iotype='in')
-    kd = Float(0.15, iotype='in')
-    me = Array(np.array([-0.5, 0.22, 1.0]), iotype='in')
-    MU = Array(np.array([0.5, 1.0, 5.5]), iotype='in')
+    # kd = Float(0.15, iotype='in')
+    # me = Array(np.array([-0.5, 0.22, 1.0]), iotype='in')
+    # MU = Array(np.array([0.5, 1.0, 5.5]), iotype='in')
+    # initialWakeDisplacement = Float(4.5, iotype='in')
+    # initialWakeAngle = Float(0.0, iotype='in')
+
+    # initial re-tuning (may be changed again)
+    pP = Float(1.88, iotype='in')
+    ke = Float(0.065, iotype='in')
+    kd = Float(0.11, iotype='in')
+    me = Array(np.array([-0.5, 0.3, 1.0]), iotype='in')
+    MU = Array(np.array([0.5, 1.0, 10.]), iotype='in')
     initialWakeDisplacement = Float(4.5, iotype='in')
-    initialWakeAngle = Float(0.0, iotype='in')
+    initialWakeAngle = Float(1.5, iotype='in')
 
     CTcorrected = Bool(True, iotype='in', desc = 'CT factor already corrected by CCBlade calculation (approximately factor cos(yaw)^2)')
     CPcorrected = Bool(True, iotype='in', desc = 'CP factor already corrected by CCBlade calculation (assumed with approximately factor cos(yaw)^3)')

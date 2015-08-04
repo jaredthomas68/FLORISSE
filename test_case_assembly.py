@@ -127,12 +127,14 @@ class floris_assembly_opt_AEP(Assembly):
             # print self.nDirections
 
             # add components to floris assembly
-            self.add('floris_adjustCtCp_%d' % i, floris_adjustCtCp(nTurbines=self.nTurbines))
-            self.add('floris_windframe_%d' % i, floris_windframe(nTurbines=self.nTurbines,
-                                                                              resolution=self.resolution))
-            self.add('floris_wcent_wdiam_%d' % i, floris_wcent_wdiam(nTurbines=self.nTurbines))
-            self.add('floris_overlap_%d' % i, floris_overlap(nTurbines=self.nTurbines))
-            self.add('floris_power_%d' % i, floris_power(nTurbines=self.nTurbines))
+            F1 = self.add('floris_adjustCtCp_%d' % i, floris_adjustCtCp(nTurbines=self.nTurbines))
+            F2 = self.add('floris_windframe_%d' % i, floris_windframe(nTurbines=self.nTurbines,
+                                                                 resolution=self.resolution))
+            F2.missing_deriv_policy = 'assume_zero'
+            F3 = self.add('floris_wcent_wdiam_%d' % i, floris_wcent_wdiam(nTurbines=self.nTurbines))
+            F4 = self.add('floris_overlap_%d' % i, floris_overlap(nTurbines=self.nTurbines))
+            F4.missing_deriv_policy = 'assume_zero'
+            F5 = self.add('floris_power_%d' % i, floris_power(nTurbines=self.nTurbines))
 
             # connect inputs to components
             self.connect('parameters', ['floris_adjustCtCp_%d.parameters' % i, 'floris_wcent_wdiam_%d.parameters' % i,
@@ -185,27 +187,27 @@ class floris_assembly_opt_AEP(Assembly):
             # #################################################################
 
             # output connections
-            self.connect('floris_power_%d.velocitiesTurbines[:]' % i, 'velocitiesTurbines_directions[%d, :]' % i)
-            self.connect('floris_power_%d.wt_power[:]' % i, 'wt_power_directions[%d, :]' % i)
+            # self.connect('floris_power_%d.velocitiesTurbines[:]' % i, 'velocitiesTurbines_directions[%d, :]' % i)
+            # self.connect('floris_power_%d.wt_power[:]' % i, 'wt_power_directions[%d, :]' % i)
             self.connect('floris_power_%d.power' % i, 'floris_AEP.power_directions[%d]' % i)
 
             # add to workflow
             self.driver.workflow.add(['floris_adjustCtCp_%d' % i, 'floris_windframe_%d' % i,
                                       'floris_wcent_wdiam_%d' % i, 'floris_overlap_%d' % i, 'floris_power_%d' % i])
 
-        self.connect('floris_AEP.power_directions', 'power_directions')
+        # self.connect('floris_AEP.power_directions', 'power_directions')
         print 'finished loop'
         # add AEP calculations to workflow
         self.driver.workflow.add(['floris_AEP'])
         print 'workflow added'
         # set up driver
-        self.driver.iprint = 1
+        self.driver.iprint = 3
         self.driver.accuracy = 1.0e-12
         self.driver.maxiter = 100
         self.driver.add_objective('-floris_AEP.AEP')
-        # self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
-        # self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
-        self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
+        self.driver.add_parameter('turbineX', low=7*126.4, high=np.sqrt(self.nTurbines)*7*126.4)
+        self.driver.add_parameter('turbineY', low=7*126.4, high=np.sqrt(self.nTurbines)*7*126.4)
+        # self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
 
 
 class floris_assembly_opt(Assembly):
@@ -360,7 +362,7 @@ class floris_assembly_opt(Assembly):
         self.driver.maxiter = 100
         self.driver.add_objective('-floris_power.power')
         self.driver.add_parameter('turbineX', low=7*126.4, high=5*7*126.4)
-        self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
+        # self.driver.add_parameter('turbineY', low=7*126.4, high=5*7*126.4)
         # self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
 
 

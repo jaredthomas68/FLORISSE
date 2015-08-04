@@ -326,7 +326,7 @@ class floris_AEP(Component):
 
     def execute(self):
 
-        print 'entering AEP - analytic'
+        # print 'entering AEP - analytic'
 
         power_directions = self.power_directions
         # print 'power_directions assigned'
@@ -342,6 +342,7 @@ class floris_AEP(Component):
 
         self.AEP = AEP
 
+        # print 'In AEP, AEP = %s, power_directions = %s' % (self.AEP, self.power_directions)
         # print 'AEP passed to component'
 
     def list_deriv_vars(self):
@@ -352,7 +353,7 @@ class floris_AEP(Component):
 
     def provideJ(self):
 
-        # print 'entering provideJ()'
+        print 'entering provideJ()'
 
         windrose_frequencies = self.windrose_frequencies
         ndirs = np.size(windrose_frequencies)
@@ -360,9 +361,10 @@ class floris_AEP(Component):
         # number of hours in a year
         hours = 8760.0
 
-        dAEP_dpower = np.eye(ndirs)*windrose_frequencies*hours
+        dAEP_dpower = np.ones(ndirs)*windrose_frequencies*hours
 
-        J = dAEP_dpower
+        J = np.array([dAEP_dpower])
+        # print 'J = ', J
 
         # print 'J assigned'
 

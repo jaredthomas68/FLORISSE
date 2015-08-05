@@ -52,9 +52,8 @@ class floris_adjustCtCp(Component):
         if not CTcorrected:
 
             self.Ct_out = Ct*np.cos(yaw)*np.cos(yaw)
-            #
-            dCt_dCt = np.eye(nTurbines, nTurbines)*np.cos(yaw)*np.cos(yaw)
-            dCt_dyaw = np.eye(nTurbines, nTurbines)*(-2*np.sin(yaw)*np.cos(yaw))
+            dCt_dCt = np.eye(nTurbines)*np.cos(yaw)*np.cos(yaw)
+            dCt_dyaw = np.eye(nTurbines)*(-2*Ct*np.sin(yaw)*np.cos(yaw))*np.pi/180.
             dCt_dCp = np.zeros((nTurbines, nTurbines))
             dCt = np.hstack((dCt_dCt, dCt_dCp, dCt_dyaw))
 
@@ -71,7 +70,7 @@ class floris_adjustCtCp(Component):
             self.Cp_out = Cp*np.cos(yaw)**pP
 
             dCp_dCp = np.eye(nTurbines, nTurbines)*np.cos(yaw)**pP
-            dCp_dyaw = np.eye(nTurbines, nTurbines)*(-Cp*pP*np.sin(yaw)*np.cos(yaw)**(pP-1.0))
+            dCp_dyaw = np.eye(nTurbines, nTurbines)*(-Cp*pP*np.sin(yaw)*np.cos(yaw)**(pP-1.0))*np.pi/180.
             dCp_dCt = np.zeros((nTurbines, nTurbines))
             dCp = np.hstack((dCp_dCt, dCp_dCp, dCp_dyaw))
 
@@ -314,8 +313,6 @@ class floris_AEP(Component):
 
     def __init__(self, nDirections):
 
-        # print 'entering AEP __init__ - analytic'
-
         super(floris_AEP, self).__init__()
 
         self.add('power_directions', Array(np.zeros(nDirections), iotype='in', units='kW', desc='vector containing \
@@ -323,50 +320,45 @@ class floris_AEP(Component):
         self.add('windrose_frequencies', Array(np.zeros(nDirections), iotype='in', desc='vector containing \
                                                the weighted frequency of wind at each direction ccw from east using \
                                                direction too'))
+        # do not use these for any gradient calculations, only for output
+        self.add('power_directions_out', Array(np.zeros(nDirections), iotype='out', units='kW', desc='vector containing \
+                                           the power production at each wind direction ccw from north', deriv_ignore=True))
+
 
     def execute(self):
 
-        # print 'entering AEP - analytic'
-
+        # locally name input values
         power_directions = self.power_directions
-        # print 'power_directions assigned'
         windrose_frequencies = self.windrose_frequencies
-        # print 'windrose_frequencies assigned'
-        # print power_directions, windrose_frequencies
 
         # number of hours in a year
         hours = 8760.0
 
+        # calculate approximate AEP
         AEP = sum(power_directions*windrose_frequencies)*hours
-        # print 'AEP calculated'
 
+        # promote AEP result to class attribute
         self.AEP = AEP
-
-        # print 'In AEP, AEP = %s, power_directions = %s' % (self.AEP, self.power_directions)
-        # print 'AEP passed to component'
+        self.power_directions_out = power_directions
 
     def list_deriv_vars(self):
 
-        # print 'entered list_deriv_vars()'
-
+        # return ('power_directions',), ('AEP', 'power_directions_out')
         return ('power_directions',), ('AEP',)
 
     def provideJ(self):
 
-        print 'entering provideJ()'
-
+        # create local variables
         windrose_frequencies = self.windrose_frequencies
         ndirs = np.size(windrose_frequencies)
 
         # number of hours in a year
         hours = 8760.0
 
+        # calculate the derivative of outputs w.r.t. each wind direction
         dAEP_dpower = np.ones(ndirs)*windrose_frequencies*hours
 
         J = np.array([dAEP_dpower])
-        # print 'J = ', J
-
-        # print 'J assigned'
 
         return J
 

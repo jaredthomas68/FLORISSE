@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
 
     rotor_diameter = 126.4
-    nRows = 10.
+    nRows = 3.
     spacing = 7.
 
     # windrose for test case from Pieter
@@ -31,7 +31,8 @@ if __name__ == "__main__":
                0.0138723040032756,0.0134869622254069,0.0131224497328283,0.0127771221082802,0.0124495035926833,0.0121382660028662,
                0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
 
-    # dirPercent = np.array([.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+    # dirPercent = np.array([.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.4])
+    # dirPercent = np.array([1.0])
     nDirections = len(dirPercent)
 
     points = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
@@ -80,8 +81,8 @@ if __name__ == "__main__":
         Ct[turbI] = 4.0*axialInduction[turbI]*(1.0-axialInduction[turbI])
         Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2.)
         generator_efficiency[turbI] = 0.944
+        # yaw[turbI] = 25.
         yaw[turbI] = 0.
-        # yaw[turbI] = 0
 
     # yaw[0] = 30
 
@@ -108,12 +109,12 @@ if __name__ == "__main__":
     # myFloris.wind_direction = 30.  # deg ccw from east using direction too
     myFloris.verbose = False
 
-    myFloris.windrose_directions = 270 - np.arange(0.0, 360.0, 360.0/nDirections)
+    myFloris.windrose_directions = 270. - np.arange(0.0, 360.0, 360.0/nDirections)
     # myFloris.windrose_directions = 270 - windDirs
     print myFloris.windrose_directions
     for i in range(0, nDirections):
-        if myFloris.windrose_directions[i] < 0:
-            myFloris.windrose_directions[i] += 360
+        if myFloris.windrose_directions[i] < 0.:
+            myFloris.windrose_directions[i] += 360.
 
     myFloris.parameters.CPcorrected = False
     myFloris.parameters.CTcorrected = False
@@ -135,30 +136,25 @@ if __name__ == "__main__":
     print('FLORIS Opt. calculation took %.03f sec.' % (toc-tic))
 
     # Display returns
-    # print 'turbine powers (kW): %s' % myFloris.wt_power
-    # print 'turbine powers (kW): %s' % myFloris2.wt_power
-    print 'turbine powers (kW): %s' % myFloris.wt_power_directions
+
+    # TODO get this for loop to work so you can print the desired values, or figure out another way to do this
+    # for i in range(0, nDirections):
+    #     print 'turbine powers for %d deg. (kW): %s' % (myFloris.windrose_directions[i],
+    #                                                    myFloris.floris_power_(i).wt_power_directions)
+    #     print 'effective wind speeds for %d deg. (m/s): %s' % (myFloris.windrose_directions[i],
+    #                                                            myFloris.floris_power_[i].velocitiesTurbines)
+    #
+    #     print 'wind farm power for %d deg. (kW): %s' % (myFloris.windrose_directions[i],
+    #                                                     myFloris.floris_power_[i].power_directions)
+    #     print 'wind turbine powers for %d deg. (kW): %s' % (myFloris.windrose_directions[i],
+    #                                                         myFloris.floris_power_[i].wt_power)
+
+    print 'power in each wind direction (kW): %s' % myFloris.power_directions
     print 'turbine X positions in wind frame (m): %s' % myFloris.turbineX
     print 'turbine Y positions in wind frame (m): %s' % myFloris.turbineY
     print 'yaw (deg) = ', myFloris.yaw
-    # print 'yaw (deg) = ', myFloris.floris_adjustCtCp.yaw
-    # print 'yaw (deg) = ', myFloris.floris_adjustCtCp.yaw
-    # print 'effective wind speeds (m/s): %s' % myFloris.velocitiesTurbines
-    print 'effective wind speeds (m/s): %s' % myFloris.floris_power_0.velocitiesTurbines
-    # print 'Wake center Y positions (m): %s' % myFloris2.wakeCentersYT
-    # print 'Wake diameters (m): %s' % myFloris2.wakeDiametersT
-    # print 'Relative wake overlap (m*m): %s' % myFloris2.wakeOverlapTRel
-    # print 'wind farm power (kW): %s' % myFloris.power
-    print 'wind farm power (kW): %s' % myFloris.power_directions
     print 'AEP (kWh): %s' % myFloris.AEP
 
-    # windDirection = myFloris.wind_direction
-    # rotationMatrix = np.array([(np.cos(windDirection), -np.sin(windDirection)),
-    #                                (np.sin(windDirection), np.cos(windDirection))])
-    # # print 'rotation matrix = ', rotationMatrix
-    # turbinepos_opt = np.dot(rotationMatrix, np.array([myFloris.turbineXw, myFloris.turbineYw]))
-    # print turbinepos_opt
-    #
     resolution = 200
     myFloris2 = floris_assembly(nTurbines=nTurbs, resolution=resolution)
     myFloris2.turbineX = myFloris.turbineX

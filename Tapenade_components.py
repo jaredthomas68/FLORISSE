@@ -375,7 +375,7 @@ class floris_power(Component):
 
         # construct Jacobian of power
         dpower = np.hstack((wakeOverlapTRel_vb, Ctb, axialInductionb, turbineXwb, rotorDiameterb, Cpb))
-        dpower = dpower[0, :]
+        dpower = dpower[0., :]
 
         # construct total Jacobian of floris_power
         J = np.vstack((dvelocitiesTurbines, dwt_power, dpower))

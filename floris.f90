@@ -2762,7 +2762,7 @@ SUBROUTINE FLORIS_POWER_BV(nturbines, wakeoverlaptrel_v, &
   REAL(dp) :: s, wakeeffcoeff, wakeeffcoeffperzone, deltax
   REAL(dp), DIMENSION(nbdirs) :: sb, wakeeffcoeffb, &
 & wakeeffcoeffperzoneb, deltaxb
-  REAL(dp), PARAMETER :: pi=3.141592653589793
+  REAL(dp), PARAMETER :: pi=3.141592653589793_dp
   REAL(dp), DIMENSION(nturbines) :: rotorarea
   REAL(dp), DIMENSION(nbdirs, nturbines) :: rotorareab
   INTEGER :: turb, turbi, zone

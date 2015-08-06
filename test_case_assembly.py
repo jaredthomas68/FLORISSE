@@ -17,6 +17,7 @@ import numpy as np
 from Analytic_components import floris_adjustCtCp
 from Analytic_components import floris_windframe
 from Analytic_components import floris_AEP
+from Analytic_components import floris_dist_const
 
 # ###########    imports for smooth model with Tapenade provided gradients    #########################################
 from Tapenade_components import floris_wcent_wdiam
@@ -106,8 +107,8 @@ class floris_assembly_opt_AEP(Assembly):
         # add driver so the workflow is not overwritten later
         # self.add('driver', SLSQPdriver())
         # self.driver.gradient_options.force_fd = True
-        # self.add('driver', pyOptDriver())
-        # self.driver.optimizer = 'SNOPT'
+        self.add('driver', pyOptDriver())
+        self.driver.optimizer = 'SNOPT'
         # self.driver.pyopt_diff = True
 
         # add AEP component first so it can be connected to
@@ -116,6 +117,10 @@ class floris_assembly_opt_AEP(Assembly):
         self.connect('windrose_frequencies', 'floris_AEP.windrose_frequencies')
         self.connect('floris_AEP.AEP', 'AEP')
         self.connect('floris_AEP.power_directions_out', 'power_directions')
+
+        F7 = self.add('floris_dist_const', floris_dist_const(nTurbines=self.nTurbines))
+        self.connect('turbineX', 'floris_dist_const.turbineX')
+        self.connect('turbineY', 'floris_dist_const.turbineY')
 
         print 'in configure, diirections = ', self.windrose_directions
 
@@ -146,7 +151,8 @@ class floris_assembly_opt_AEP(Assembly):
             self.connect('Ct', 'floris_adjustCtCp_%d.Ct_in' % i)
             self.connect('Cp', 'floris_adjustCtCp_%d.Cp_in' % i)
             self.connect('generator_efficiency', 'floris_power_%d.generator_efficiency' % i)
-            self.connect('yaw', ['floris_adjustCtCp_%d.yaw' % i, 'floris_wcent_wdiam_%d.yaw' % i])
+            self.connect('yaw', ['floris_adjustCtCp_%d.yaw' % i, 'floris_wcent_wdiam_%d.yaw' % i,
+                                 'floris_power_%d.yaw' % i])
             self.connect('wind_speed', 'floris_power_%d.wind_speed' % i)
             self.connect('air_density', 'floris_power_%d.air_density' % i)
             self.connect('windrose_directions[%d]' % i, 'floris_windframe_%d.wind_direction' % i)
@@ -196,15 +202,16 @@ class floris_assembly_opt_AEP(Assembly):
                                       'floris_wcent_wdiam_%d' % i, 'floris_overlap_%d' % i, 'floris_power_%d' % i])
 
         # add AEP calculations to workflow
-        self.driver.workflow.add(['floris_AEP'])
+        self.driver.workflow.add(['floris_AEP', 'floris_dist_const'])
         # set up driver
-        # self.driver.iprint = 3
-        # self.driver.accuracy = 1.0e-12
-        # self.driver.maxiter = 100
-        # self.driver.add_objective('-floris_AEP.AEP')
-        # self.driver.add_parameter('turbineX', low=7*126.4, high=np.sqrt(self.nTurbines)*7*126.4)
-        # self.driver.add_parameter('turbineY', low=7*126.4, high=np.sqrt(self.nTurbines)*7*126.4)
+        self.driver.iprint = 3
+        self.driver.accuracy = 1.0e-12
+        self.driver.maxiter = 100
+        self.driver.add_objective('-floris_AEP.AEP')
+        self.driver.add_parameter('turbineX', low=7*126.4, high=np.sqrt(self.nTurbines)*7*126.4)
+        self.driver.add_parameter('turbineY', low=7*126.4, high=np.sqrt(self.nTurbines)*7*126.4)
         # self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
+        self.driver.add_constraint('floris_dist_const.separation > 2*rotorDiameter[0]')
 
 
 class floris_assembly_opt(Assembly):

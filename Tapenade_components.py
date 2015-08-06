@@ -35,22 +35,83 @@ class floris_wcent_wdiam(Component):
         self.add('wakeDiametersT', Array(np.zeros(3*nTurbines*nTurbines), iotype='out', dtype='float', \
                                          desc='wake diameter of each zone of each wake at each turbine'))
 
-
     def execute(self):
 
         # print 'entering wcent_wdiam - tapenade'
 
         # rename inputs and outputs
         # pP = self.parameters.pP
-        kd = self.parameters.kd
-        ke = self.parameters.ke
-        initialWakeDisplacement = self.parameters.initialWakeDisplacement
-        initialWakeAngle = self.parameters.initialWakeAngle
+        # kd = self.parameters.kd
+        # ke = self.parameters.ke
+        # initialWakeDisplacement = self.parameters.initialWakeDisplacement
+        # initialWakeAngle = self.parameters.initialWakeAngle
         rotorDiameter = self.rotorDiameter
         Ct = self.Ct
-        keCorrCT = self.parameters.keCorrCT
+        # keCorrCT = self.parameters.keCorrCT
         Region2CT = self.parameters.Region2CT
-        me = self.parameters.me
+        # me = self.parameters.me
+
+        if self.parameters.FLORISoriginal:
+
+            ke = 0.065
+            keCorrCT = 0.0
+            keCorrTI = 0.0
+            keCorrHR = 0.0
+            keCorrHRTI = 0.0
+            keCorrArray = 0.0
+
+            kd = 0.15
+            kdCorrDirection = 0.0
+
+            me = np.array([-0.5, 0.22, 1.0])
+            MU = np.array([0.5, 1.0, 5.5])
+            pP = 1.88
+            useWakeAngle = False
+            initialWakeDisplacement = 4.5
+            initialWakeAngle = self.parameters.initialWakeAngle
+            bd = -0.01
+            useaUbU = True
+            aU = 5.0
+            bU = 1.66
+            adjustInitialWakeDiamToYaw = False
+
+        else:
+            # rename inputs and outputs
+            ke = self.parameters.ke
+
+            keCorrCT = self.parameters.keCorrCT
+            keCorrTI = self.parameters.keCorrTI
+            keCorrHR = self.parameters.keCorrHR
+            keCorrHRTI = self.parameters.keCorrHRTI
+            keCorrArray = self.parameters.keCorrArray
+
+            kd = self.parameters.kd
+            kdCorrYawDirection = self.parameters.kdCorrYawDirection
+
+            me = self.parameters.me
+            MU = self.parameters.MU
+
+            initialWakeDisplacement = self.parameters.initialWakeDisplacement
+            useWakeAngle = self.parameters.useWakeAngle
+            initialWakeAngle = self.parameters.initialWakeAngle
+
+            bd = self.parameters.bd
+
+            useaUbU = self.parameters.useaUbU
+            aU = self.parameters.aU
+            bU = self.parameters.bU
+
+            adjustInitialWakeDiamToYaw = self.parameters.adjustInitialWakeDiamToYaw
+
+            pP = self.parameters.pP
+
+        baselineCT = self.parameters.baselineCT
+        baselineTI = self.parameters.baselineTI
+        keSaturation = self.parameters.keSaturation
+
+        CTcorrected = self.parameters.CTcorrected
+        CPcorrected = self.parameters.CPcorrected
+        axialIndProvided = self.parameters.axialIndProvided
 
         # x and y positions w.r.t. the wind direction (wind = +x)
         turbineXw = self.turbineXw
@@ -61,7 +122,7 @@ class floris_wcent_wdiam(Component):
         # print yaw_deg, Ct
         wakeCentersYT_vec, wakeDiametersT_vec = _floris.floris_wcent_wdiam(kd, initialWakeDisplacement, \
 							  initialWakeAngle, ke, keCorrCT, Region2CT, yaw_deg, Ct, turbineXw, turbineYw, \
-                              rotorDiameter, me)
+                              rotorDiameter, me, bd, useWakeAngle, adjustInitialWakeDiamToYaw)
 
         # Outputs in vector form so they can be used in Jacobian creation
         self.wakeCentersYT = wakeCentersYT_vec
@@ -73,16 +134,79 @@ class floris_wcent_wdiam(Component):
 
     def provideJ(self):
 
-        # rename inputs
-        kd = self.parameters.kd
-        ke = self.parameters.ke
-        initialWakeDisplacement = self.parameters.initialWakeDisplacement
-        initialWakeAngle = self.parameters.initialWakeAngle
+        # rename inputs and outputs
+        # pP = self.parameters.pP
+        # kd = self.parameters.kd
+        # ke = self.parameters.ke
+        # initialWakeDisplacement = self.parameters.initialWakeDisplacement
+        # initialWakeAngle = self.parameters.initialWakeAngle
         rotorDiameter = self.rotorDiameter
         Ct = self.Ct
-        keCorrCT = self.parameters.keCorrCT
+        # keCorrCT = self.parameters.keCorrCT
         Region2CT = self.parameters.Region2CT
-        me = self.parameters.me
+        # me = self.parameters.me
+
+        if self.parameters.FLORISoriginal:
+
+            ke = 0.065
+            keCorrCT = 0.0
+            keCorrTI = 0.0
+            keCorrHR = 0.0
+            keCorrHRTI = 0.0
+            keCorrArray = 0.0
+
+            kd = 0.15
+            kdCorrDirection = 0.0
+
+            me = np.array([-0.5, 0.22, 1.0])
+            MU = np.array([0.5, 1.0, 5.5])
+            pP = 1.88
+            useWakeAngle = False
+            initialWakeDisplacement = 4.5
+            initialWakeAngle = self.parameters.initialWakeAngle
+            bd = -0.01
+            useaUbU = True
+            aU = 5.0
+            bU = 1.66
+            adjustInitialWakeDiamToYaw = False
+
+        else:
+            # rename inputs and outputs
+            ke = self.parameters.ke
+
+            keCorrCT = self.parameters.keCorrCT
+            keCorrTI = self.parameters.keCorrTI
+            keCorrHR = self.parameters.keCorrHR
+            keCorrHRTI = self.parameters.keCorrHRTI
+            keCorrArray = self.parameters.keCorrArray
+
+            kd = self.parameters.kd
+            kdCorrYawDirection = self.parameters.kdCorrYawDirection
+
+            me = self.parameters.me
+            MU = self.parameters.MU
+
+            initialWakeDisplacement = self.parameters.initialWakeDisplacement
+            useWakeAngle = self.parameters.useWakeAngle
+            initialWakeAngle = self.parameters.initialWakeAngle
+
+            bd = self.parameters.bd
+
+            useaUbU = self.parameters.useaUbU
+            aU = self.parameters.aU
+            bU = self.parameters.bU
+
+            adjustInitialWakeDiamToYaw = self.parameters.adjustInitialWakeDiamToYaw
+
+            pP = self.parameters.pP
+
+        baselineCT = self.parameters.baselineCT
+        baselineTI = self.parameters.baselineTI
+        keSaturation = self.parameters.keSaturation
+
+        CTcorrected = self.parameters.CTcorrected
+        CPcorrected = self.parameters.CPcorrected
+        axialIndProvided = self.parameters.axialIndProvided
 
         # x and y positions w.r.t. the wind direction (wind = +x)
         turbineXw = self.turbineXw
@@ -102,9 +226,11 @@ class floris_wcent_wdiam(Component):
         wakeCentersYT_vecb = np.eye(nbdirs, nTurbines*nTurbines)
 
         # function call to extract gradients of wakeCentersYT w.r.t. all design vars
-        yawb, Ctb, turbineXwb, turbineYwb, rotorDiameterb, _, _ = _floris.floris_wcent_wdiam_bv(kd, initialWakeDisplacement, \
+
+        yawb, Ctb, turbineXwb, turbineYwb, rotorDiameterb, _, _ = _floris.floris_wcent_wdiam_bv(kd, initialWakeDisplacement,
 							  initialWakeAngle, ke, keCorrCT, Region2CT, yaw_deg, Ct, turbineXw, turbineYw, \
-                              rotorDiameter, me, wakeCentersYT_vecb, wakeDiametersT_vecb)
+                              rotorDiameter, me, bd, useWakeAngle, adjustInitialWakeDiamToYaw, wakeCentersYT_vecb, \
+                              wakeDiametersT_vecb)
 
         # construct Jacobian of wakeCentersYT
         dwc = np.hstack((yawb, Ctb, turbineXwb, turbineYwb, rotorDiameterb))
@@ -115,9 +241,10 @@ class floris_wcent_wdiam(Component):
         wakeDiametersT_vecb = np.eye(nbdirs, nbdirs)
 
         # function call to extract gradients of wakeDiametersT w.r.t. all design vars
-        yawb, Ctb, turbineXwb, turbineYwb, rotorDiameterb, _, _ = _floris.floris_wcent_wdiam_bv(kd, initialWakeDisplacement, \
+        yawb, Ctb, turbineXwb, turbineYwb, rotorDiameterb, _, _ = _floris.floris_wcent_wdiam_bv(kd, initialWakeDisplacement,
 							  initialWakeAngle, ke, keCorrCT, Region2CT, yaw_deg, Ct, turbineXw, turbineYw, \
-                              rotorDiameter, me, wakeCentersYT_vecb, wakeDiametersT_vecb)
+                              rotorDiameter, me, bd, useWakeAngle, adjustInitialWakeDiamToYaw, wakeCentersYT_vecb, \
+                              wakeDiametersT_vecb)
 
         # construct Jacobian of wakeDiametersT
         dwd = np.hstack((yawb, Ctb, turbineXwb, turbineYwb, rotorDiameterb))
@@ -237,6 +364,8 @@ class floris_power(Component):
                                                desc='generator efficiency of all turbines'))
         self.add('turbineXw', Array(np.zeros(nTurbines), iotype='in', dtype='float', units='m', \
                                     desc='X positions of turbines in the wind direction reference frame'))
+        self.add('yaw', Array(np.zeros(nTurbines), iotype='in', dtype='float', units='deg', \
+                                    desc='yaw angle of turbines wrt the wind direction'))
         self.add('wakeCentersYT',  Array(np.zeros(nTurbines*nTurbines), iotype='in', units='m', \
                                          desc='centers of the wakes at each turbine'))
         self.add('wakeDiametersT', Array(np.zeros(3*nTurbines*nTurbines), iotype='in', units='m', \
@@ -254,9 +383,9 @@ class floris_power(Component):
 
         # reassign input variables
         wakeOverlapTRel_v = self.wakeOverlapTRel
-        ke = self.parameters.ke
-        keCorrArray = self.parameters.keCorrArray
-        keCorrCT = self.parameters.keCorrCT
+        # ke = self.parameters.ke
+        # keCorrArray = self.parameters.keCorrArray
+        # keCorrCT = self.parameters.keCorrCT
         Region2CT = self.parameters.Region2CT
         Ct = self.Ct
         Vinf = self.wind_speed
@@ -266,7 +395,70 @@ class floris_power(Component):
         rho = self.air_density
         generator_efficiency = self.generator_efficiency
         Cp = self.Cp
-        MU = self.parameters.MU
+        yaw = self.yaw
+        # MU = self.parameters.MU
+        # axialIndProvided = self.parameters.axialIndProvided
+
+        if self.parameters.FLORISoriginal:
+
+            ke = 0.065
+            keCorrCT = 0.0
+            # ignore these for now
+            # keCorrTI = 0.0
+            # keCorrHR = 0.0
+            # keCorrHRTI = 0.0
+            keCorrArray = 0.0
+
+            kd = 0.15
+            # kdCorrDirection = 0.0
+
+            me = np.array([-0.5, 0.22, 1.0])
+            MU = np.array([0.5, 1.0, 5.5])
+            pP = 1.88
+            useWakeAngle = False
+            initialWakeDisplacement = 4.5
+            bd = -0.01
+            useaUbU = True
+            aU = 5.0
+            bU = 1.66
+            adjustInitialWakeDiamToYaw = False
+
+        else:
+            # rename inputs and outputs
+            ke = self.parameters.ke
+
+            keCorrCT = self.parameters.keCorrCT
+            keCorrTI = self.parameters.keCorrTI
+            keCorrHR = self.parameters.keCorrHR
+            keCorrHRTI = self.parameters.keCorrHRTI
+            keCorrArray = self.parameters.keCorrArray
+
+            kd = self.parameters.kd
+            kdCorrYawDirection = self.parameters.kdCorrYawDirection
+
+            me = self.parameters.me
+            MU = self.parameters.MU
+
+            initialWakeDisplacement = self.parameters.initialWakeDisplacement
+            useWakeAngle = self.parameters.useWakeAngle
+            initialWakeAngle = self.parameters.initialWakeAngle
+
+            bd = self.parameters.bd
+
+            useaUbU = self.parameters.useaUbU
+            aU = self.parameters.aU
+            bU = self.parameters.bU
+
+            adjustInitialWakeDiamToYaw = self.parameters.adjustInitialWakeDiamToYaw
+
+            pP = self.parameters.pP
+
+        baselineCT = self.parameters.baselineCT
+        baselineTI = self.parameters.baselineTI
+        keSaturation = self.parameters.keSaturation
+
+        CTcorrected = self.parameters.CTcorrected
+        CPcorrected = self.parameters.CPcorrected
         axialIndProvided = self.parameters.axialIndProvided
 
         # how far in front of turbines to use overlap power calculations (in rotor diameters). This must match the
@@ -279,14 +471,14 @@ class floris_power(Component):
 
         # call to fortran code to obtain output values
         velocitiesTurbines, wt_power, power = _floris.floris_power(wakeOverlapTRel_v, Ct, axialInduction, \
-                                                            axialIndProvided, keCorrCT, Region2CT, ke, \
-                                                            Vinf, keCorrArray, turbineXw, p_near0, rotorDiameter, MU, \
-                                                            rho, Cp, generator_efficiency)
+                                                            axialIndProvided, useaUbU, keCorrCT, Region2CT, ke, \
+                                                            Vinf, keCorrArray, turbineXw, yaw, p_near0, rotorDiameter, MU, \
+                                                            rho, aU, bU, Cp, generator_efficiency)
 
         # optional print statements
         if self.verbose:
             print "wind speed at turbines %s [m/s]" % velocitiesTurbines
-            print "rotor area %s" % np.pi*rotorDiameter*rotorDiameter/4.0
+            print "rotor area %d" % (np.pi*rotorDiameter[0]*rotorDiameter[0]/4.0)
             print "rho %s" % rho
             print "generator_efficiency %s" % generator_efficiency
             print "powers turbines %s [kW]" % wt_power
@@ -302,7 +494,7 @@ class floris_power(Component):
     def list_deriv_vars(self):
         """specifies the inputs and outputs where derivatives are defined"""
 
-        return ('wakeOverlapTRel', 'Ct', 'axialInduction', 'turbineXw', \
+        return ('wakeOverlapTRel', 'Ct', 'axialInduction', 'turbineXw', 'yaw', \
                 'rotorDiameter', 'Cp'), ('velocitiesTurbines', 'wt_power', 'power')
         # return ('turbineX', 'turbineY'), ('turbineXw', 'turbineYw', 'wsw_position')
 
@@ -314,11 +506,11 @@ class floris_power(Component):
         # number of directions to differentiate
         nbdirs = nTurbines
 
-        # reassign inputs
+        # reassign input variables
         wakeOverlapTRel_v = self.wakeOverlapTRel
-        ke = self.parameters.ke
-        keCorrArray = self.parameters.keCorrArray
-        keCorrCT = self.parameters.keCorrCT
+        # ke = self.parameters.ke
+        # keCorrArray = self.parameters.keCorrArray
+        # keCorrCT = self.parameters.keCorrCT
         Region2CT = self.parameters.Region2CT
         Ct = self.Ct
         Vinf = self.wind_speed
@@ -328,7 +520,70 @@ class floris_power(Component):
         rho = self.air_density
         generator_efficiency = self.generator_efficiency
         Cp = self.Cp
-        MU = self.parameters.MU
+        yaw = self.yaw
+        # MU = self.parameters.MU
+        # axialIndProvided = self.parameters.axialIndProvided
+
+        if self.parameters.FLORISoriginal:
+
+            ke = 0.065
+            keCorrCT = 0.0
+            # ignore these for now
+            # keCorrTI = 0.0
+            # keCorrHR = 0.0
+            # keCorrHRTI = 0.0
+            keCorrArray = 0.0
+
+            kd = 0.15
+            # kdCorrDirection = 0.0
+
+            me = np.array([-0.5, 0.22, 1.0])
+            MU = np.array([0.5, 1.0, 5.5])
+            pP = 1.88
+            useWakeAngle = False
+            initialWakeDisplacement = 4.5
+            bd = -0.01
+            useaUbU = True
+            aU = 5.0
+            bU = 1.66
+            adjustInitialWakeDiamToYaw = False
+
+        else:
+            # rename inputs and outputs
+            ke = self.parameters.ke
+
+            keCorrCT = self.parameters.keCorrCT
+            keCorrTI = self.parameters.keCorrTI
+            keCorrHR = self.parameters.keCorrHR
+            keCorrHRTI = self.parameters.keCorrHRTI
+            keCorrArray = self.parameters.keCorrArray
+
+            kd = self.parameters.kd
+            kdCorrYawDirection = self.parameters.kdCorrYawDirection
+
+            me = self.parameters.me
+            MU = self.parameters.MU
+
+            initialWakeDisplacement = self.parameters.initialWakeDisplacement
+            useWakeAngle = self.parameters.useWakeAngle
+            initialWakeAngle = self.parameters.initialWakeAngle
+
+            bd = self.parameters.bd
+
+            useaUbU = self.parameters.useaUbU
+            aU = self.parameters.aU
+            bU = self.parameters.bU
+
+            adjustInitialWakeDiamToYaw = self.parameters.adjustInitialWakeDiamToYaw
+
+            pP = self.parameters.pP
+
+        baselineCT = self.parameters.baselineCT
+        baselineTI = self.parameters.baselineTI
+        keSaturation = self.parameters.keSaturation
+
+        CTcorrected = self.parameters.CTcorrected
+        CPcorrected = self.parameters.CPcorrected
         axialIndProvided = self.parameters.axialIndProvided
 
         # see execute(self) for explanation
@@ -340,41 +595,41 @@ class floris_power(Component):
         powerb = np.zeros(nbdirs)
 
         # call to fortran to obtain gradients of velocitiesTurbines
-        wakeOverlapTRel_vb, Ctb, axialInductionb, turbineXwb, rotorDiameterb, Cpb, _, _, _ \
-            = _floris.floris_power_bv(wakeOverlapTRel_v, Ct,axialInduction,axialIndProvided, keCorrCT, Region2CT, ke, \
-                                      Vinf, keCorrArray, turbineXw, p_near0, rotorDiameter, MU, rho, Cp, \
-                                      generator_efficiency, velocitiesTurbinesb, wt_powerb, powerb)
+        wakeOverlapTRel_vb, Ctb, axialInductionb, turbineXwb, yawb, rotorDiameterb, Cpb, _, _, _ \
+            = _floris.floris_power_bv(wakeOverlapTRel_v, Ct, axialInduction, axialIndProvided, useaUbU, keCorrCT, \
+                                      Region2CT, ke, Vinf, keCorrArray, turbineXw, yaw, p_near0, rotorDiameter, MU, \
+                                      rho, aU, bU, Cp, generator_efficiency, velocitiesTurbinesb, wt_powerb, powerb)
 
         # construct Jacobian of velocitiesTurbines
         dvelocitiesTurbines = np.hstack((wakeOverlapTRel_vb[:, :], Ctb[:, :], axialInductionb[:, :], turbineXwb[:, :], \
-                                         rotorDiameterb[:, :], Cpb[:, :]))
+                                         yawb[:, :], rotorDiameterb[:, :], Cpb[:, :]))
 
         # input arrays to direct differentiation
         velocitiesTurbinesb[:, :] = 0.0
         wt_powerb = np.eye(nbdirs, nTurbines)
 
         # call to fortran to obtain gradients wt_power
-        wakeOverlapTRel_vb, Ctb, axialInductionb, turbineXwb, rotorDiameterb, Cpb, _, _, _ \
-            = _floris.floris_power_bv(wakeOverlapTRel_v, Ct,axialInduction,axialIndProvided, keCorrCT, Region2CT, ke, \
-                                      Vinf, keCorrArray, turbineXw, p_near0, rotorDiameter, MU, rho, Cp, \
-                                      generator_efficiency, velocitiesTurbinesb, wt_powerb, powerb)
+        wakeOverlapTRel_vb, Ctb, axialInductionb, turbineXwb, yawb, rotorDiameterb, Cpb, _, _, _ \
+            = _floris.floris_power_bv(wakeOverlapTRel_v, Ct, axialInduction, axialIndProvided, useaUbU, keCorrCT, \
+                                      Region2CT, ke, Vinf, keCorrArray, turbineXw, yaw, p_near0, rotorDiameter, MU, \
+                                      rho, aU, bU, Cp, generator_efficiency, velocitiesTurbinesb, wt_powerb, powerb)
 
         # construct Jacobian of wt_power
         dwt_power = np.hstack((wakeOverlapTRel_vb[:, :], Ctb[:, :], axialInductionb[:, :], turbineXwb[:, :], \
-                               rotorDiameterb[:, :], Cpb[:, :]))
+                               yawb[:, :], rotorDiameterb[:, :], Cpb[:, :]))
 
         # input arrays to direct differentiation
         wt_powerb[:, :] = 0.0
         powerb[0] = 1.0
 
         # call to fortran to obtain gradients of power
-        wakeOverlapTRel_vb, Ctb, axialInductionb, turbineXwb, rotorDiameterb, Cpb, _, _, _ \
-            = _floris.floris_power_bv(wakeOverlapTRel_v, Ct,axialInduction,axialIndProvided, keCorrCT, Region2CT, ke, \
-                                      Vinf, keCorrArray, turbineXw, p_near0, rotorDiameter, MU, rho, Cp, \
-                                      generator_efficiency, velocitiesTurbinesb, wt_powerb, powerb)
+        wakeOverlapTRel_vb, Ctb, axialInductionb, turbineXwb, yawb, rotorDiameterb, Cpb, _, _, _ \
+            = _floris.floris_power_bv(wakeOverlapTRel_v, Ct, axialInduction, axialIndProvided, useaUbU, keCorrCT, \
+                                      Region2CT, ke, Vinf, keCorrArray, turbineXw, yaw, p_near0, rotorDiameter, MU, \
+                                      rho, aU, bU, Cp, generator_efficiency, velocitiesTurbinesb, wt_powerb, powerb)
 
         # construct Jacobian of power
-        dpower = np.hstack((wakeOverlapTRel_vb, Ctb, axialInductionb, turbineXwb, rotorDiameterb, Cpb))
+        dpower = np.hstack((wakeOverlapTRel_vb, Ctb, axialInductionb, turbineXwb, yawb, rotorDiameterb, Cpb))
         dpower = dpower[0., :]
 
         # construct total Jacobian of floris_power

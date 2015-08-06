@@ -41,13 +41,75 @@ class floris_adjustCtCp(Component):
         Cp = self.Cp_in
         nTurbines = np.size(Ct)
         yaw = self.yaw*np.pi/180.
-        CTcorrected = self.parameters.CTcorrected
-        CPcorrected = self.parameters.CPcorrected
-        pP = self.parameters.pP
+        # CTcorrected = self.parameters.CTcorrected
+        # CPcorrected = self.parameters.CPcorrected
+        # pP = self.parameters.pP
 
         # print 'before', Ct, Cp
         # print 'yaw in adjust = ', yaw
         # print 'Ct in adjust = ', Ct
+
+        if self.parameters.FLORISoriginal:
+
+            ke = 0.065
+            keCorrCT = 0.0
+            # ignore these for now
+            # keCorrTI = 0.0
+            # keCorrHR = 0.0
+            # keCorrHRTI = 0.0
+            keCorrArray = 0.0
+
+            kd = 0.15
+            # kdCorrDirection = 0.0
+
+            me = np.array([-0.5, 0.22, 1.0])
+            MU = np.array([0.5, 1.0, 5.5])
+            pP = 1.88
+            useWakeAngle = False
+            initialWakeDisplacement = 4.5
+            bd = -0.01
+            useaUbU = True
+            aU = 5.0
+            bU = 1.66
+            adjustInitialWakeDiamToYaw = False
+
+        else:
+            # rename inputs and outputs
+            ke = self.parameters.ke
+
+            keCorrCT = self.parameters.keCorrCT
+            keCorrTI = self.parameters.keCorrTI
+            keCorrHR = self.parameters.keCorrHR
+            keCorrHRTI = self.parameters.keCorrHRTI
+            keCorrArray = self.parameters.keCorrArray
+
+            kd = self.parameters.kd
+            kdCorrYawDirection = self.parameters.kdCorrYawDirection
+
+            me = self.parameters.me
+            MU = self.parameters.MU
+
+            initialWakeDisplacement = self.parameters.initialWakeDisplacement
+            useWakeAngle = self.parameters.useWakeAngle
+            initialWakeAngle = self.parameters.initialWakeAngle
+
+            bd = self.parameters.bd
+
+            useaUbU = self.parameters.useaUbU
+            aU = self.parameters.aU
+            bU = self.parameters.bU
+
+            adjustInitialWakeDiamToYaw = self.parameters.adjustInitialWakeDiamToYaw
+
+            pP = self.parameters.pP
+
+        baselineCT = self.parameters.baselineCT
+        baselineTI = self.parameters.baselineTI
+        keSaturation = self.parameters.keSaturation
+
+        CTcorrected = self.parameters.CTcorrected
+        CPcorrected = self.parameters.CPcorrected
+        axialIndProvided = self.parameters.axialIndProvided
 
         if not CTcorrected:
 
@@ -146,6 +208,68 @@ class floris_windframe(Component):
 
         # print 'entering windframe - analytic'
 
+        if self.parameters.FLORISoriginal:
+
+            ke = 0.065
+            keCorrCT = 0.0
+            # ignore these for now
+            # keCorrTI = 0.0
+            # keCorrHR = 0.0
+            # keCorrHRTI = 0.0
+            keCorrArray = 0.0
+
+            kd = 0.15
+            # kdCorrYawDirection = 0.0  # ignored for now
+
+            me = np.array([-0.5, 0.22, 1.0])
+            MU = np.array([0.5, 1.0, 5.5])
+            pP = 1.88
+            useWakeAngle = False
+            initialWakeDisplacement = 4.5
+            bd = -0.01
+            useaUbU = True
+            aU = 5.0
+            bU = 1.66
+            adjustInitialWakeDiamToYaw = False
+
+        else:
+            # rename inputs and outputs
+            ke = self.parameters.ke
+
+            keCorrCT = self.parameters.keCorrCT
+            keCorrTI = self.parameters.keCorrTI
+            keCorrHR = self.parameters.keCorrHR
+            keCorrHRTI = self.parameters.keCorrHRTI
+            keCorrArray = self.parameters.keCorrArray
+
+            kd = self.parameters.kd
+            kdCorrYawDirection = self.parameters.kdCorrYawDirection
+
+            me = self.parameters.me
+            MU = self.parameters.MU
+
+            initialWakeDisplacement = self.parameters.initialWakeDisplacement
+            useWakeAngle = self.parameters.useWakeAngle
+            initialWakeAngle = self.parameters.initialWakeAngle
+
+            bd = self.parameters.bd
+
+            useaUbU = self.parameters.useaUbU
+            aU = self.parameters.aU
+            bU = self.parameters.bU
+
+            adjustInitialWakeDiamToYaw = self.parameters.adjustInitialWakeDiamToYaw
+
+            pP = self.parameters.pP
+
+        baselineCT = self.parameters.baselineCT
+        baselineTI = self.parameters.baselineTI
+        keSaturation = self.parameters.keSaturation
+
+        CTcorrected = self.parameters.CTcorrected
+        CPcorrected = self.parameters.CPcorrected
+        axialIndProvided = self.parameters.axialIndProvided
+
         Vinf = self.wind_speed
         windDirection = self.wind_direction*np.pi/180.0
 
@@ -231,82 +355,6 @@ class floris_windframe(Component):
         return J
 
 
-class floris_windrose(Component):
-    """ Adjust Cp and Ct to yaw if they are not already adjusted """
-
-    parameters = VarTree(FLORISParameters(), iotype='in')
-    Ct_in = Array(iotype='in', dtype='float', desc='Thrust coefficient for all turbines')
-    Cp_in = Array(iotype='in', dtype='float', desc='power coefficient for all turbines')
-    Ct_out = Array(iotype='out', dtype='float', desc='Thrust coefficient for all turbines')
-    Cp_out = Array(iotype='out', dtype='float', desc='power coefficient for all turbines')
-    generator_efficiency = Array(iotype='in', dtype='float', desc='generator efficiency of all turbines')
-    yaw = Array(iotype='in', desc='yaw of each turbine')
-
-    def execute(self):
-
-        # print 'entering adjustCtCP - analytic'
-
-        # print 'CTcorrected is', self.parameters.CTcorrected
-        # print 'CPcorrected is', self.parameters.CPcorrected
-
-        Ct = self.Ct_in
-        Cp = self.Cp_in
-        nTurbines = np.size(Ct)
-        yaw = self.yaw*np.pi/180.
-        CTcorrected = self.parameters.CTcorrected
-        CPcorrected = self.parameters.CPcorrected
-        pP = self.parameters.pP
-
-        # print 'before', Ct, Cp
-        # print 'yaw in adjust = ', yaw
-        # print 'Ct in adjust = ', Ct
-
-        if not CTcorrected:
-
-            self.Ct_out = Ct*np.cos(yaw)*np.cos(yaw)
-            #
-            # dCt_dCt = np.eye(nTurbines, nTurbines)*np.cos(yaw)*np.cos(yaw)
-            # dCt_dyaw = np.eye(nTurbines, nTurbines)*(-2*np.sin(yaw)*np.cos(yaw))
-            # dCt_dCp = np.zeros((nTurbines, nTurbines))
-            # dCt = np.hstack((dCt_dCt, dCt_dCp, dCt_dyaw))
-
-        else:
-
-            self.Ct_out = Ct
-            # dCt_dCt = np.eye(nTurbines, nTurbines)*np.cos(yaw)*np.cos(yaw)
-            # dCt_dCp = np.zeros((nTurbines, nTurbines))
-            # dCt_dyaw = np.zeros((nTurbines, nTurbines))
-            # dCt = np.hstack((dCt_dCt, dCt_dCp, dCt_dyaw))
-
-        if not CPcorrected:
-
-            self.Cp_out = Cp*np.cos(yaw)**pP
-
-            # dCp_dCp = np.eye(nTurbines, nTurbines)*np.cos(yaw)**pP
-            # dCp_dyaw = np.eye(nTurbines, nTurbines)*(-Cp*pP*np.sin(yaw)*np.cos(yaw)**(pP-1.0))
-            # dCp_dCt = np.zeros((nTurbines, nTurbines))
-            # dCp = np.hstack((dCp_dCt, dCp_dCp, dCp_dyaw))
-
-        else:
-
-            self.Cp_out = Cp
-            # dCp_dCp = np.eye(nTurbines, nTurbines)*np.cos(yaw)**pP
-            # dCp_dCt = np.zeros((nTurbines, nTurbines))
-            # dCp_dyaw = np.zeros((nTurbines, nTurbines))
-            # dCp = np.hstack((dCp_dCt, dCp_dCp, dCp_dyaw))
-        #
-    #     self.J = np.vstack((dCt, dCp))
-    #
-    # def list_deriv_vars(self):
-    #
-    #     return ('Ct_in', 'Cp_in', 'yaw'), ('Ct_out', 'Cp_out')
-    #
-    #
-    # def provideJ(self):
-    #
-    #     return self.J
-
-
 class floris_AEP(Component):
 
     AEP = Float(iotype='out', units='kW', desc='total annual energy output of wind farm')
@@ -323,7 +371,6 @@ class floris_AEP(Component):
         # do not use these for any gradient calculations, only for output
         self.add('power_directions_out', Array(np.zeros(nDirections), iotype='out', units='kW', desc='vector containing \
                                            the power production at each wind direction ccw from north', deriv_ignore=True))
-
 
     def execute(self):
 
@@ -362,3 +409,53 @@ class floris_AEP(Component):
 
         return J
 
+
+class floris_dist_const(Component):
+
+    parameters = VarTree(FLORISParameters(), iotype='in')
+
+    def __init__(self, nTurbines):
+
+        # print 'entering wcent_wdiam __init__ - Tapenade'
+
+        super(floris_dist_const, self).__init__()
+
+        # Explicitly size input arrays
+        self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', \
+                                    desc='x coordinates of turbines in wind dir. ref. frame'))
+        self.add('turbineY', Array(np.zeros(nTurbines), iotype='in', \
+                                    desc='y coordinates of turbines in wind dir. ref. frame'))
+
+        # Explicitly size output array
+        self.add('separation', Array(np.zeros((nTurbines-1.)*nTurbines/2.), iotype='out', dtype='float', \
+                                        desc='spacing of all turbines in the wind farm'))
+
+    def execute(self):
+
+        turbineX = self.turbineX
+        turbineY = self.turbineY
+        nTurbines = turbineX.size
+        separation = np.zeros((nTurbines-1.)*nTurbines/2.)
+
+        k = 0
+        for i in range(0, nTurbines):
+            for j in range(i+1, nTurbines):
+                separation[k] = np.sqrt((turbineX[j]-turbineX[i])**2+(turbineY[j]-turbineY[i])**2)
+                k += 1
+        self.separation = separation
+
+    # def list_deriv_vars(self):
+    #     return ('turbineXw', 'turbineYw'), ('separation',)
+    #
+    # def provideJ(self):
+    #     nTurbines = self.nTurbines
+    #     turbineX = self.turbineX
+    #     turbineY = self.turbineY
+    #     separation = np.zeros((nTurbines-1.)*nTurbines/2.)
+    #
+    #     k = 0
+    #     for i in range(0, nTurbines):
+    #         for j in range(i+1, nTurbines):
+    #             separation[k] = np.sqrt((turbineX[j]-turbineX[i])**2+(turbineY[j]-turbineY[i])**2)
+    #             k += 1
+    #     self.separation = separation

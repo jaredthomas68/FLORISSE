@@ -66,6 +66,7 @@ def test_power():
     comp.air_density = 1.1716  # kg/m^3
     comp.wind_direction = 30.  # deg
     comp.verbose = False
+    comp.parameters.FLORISoriginal = True
 
     names, errors = check_gradient(comp, fd='central', step_size=1e-6, tol=1e-6, display=True,
         show_missing_warnings=True, show_scaling_warnings=False, min_grad=1e-6, max_grad=1e6)
@@ -280,10 +281,10 @@ def test_adjustCtCp():
     comp.Cp_in = Cp
     comp.yaw = yaw
         # Define flow properties
-    comp.parameters.CTcorrected = False
-    # comp.parameters.CTcorrected = True
-    comp.parameters.CPcorrected = False
-    # comp.parameters.CPcorrected = True
+    # comp.parameters.CTcorrected = False
+    comp.parameters.CTcorrected = True
+    # comp.parameters.CPcorrected = False
+    comp.parameters.CPcorrected = True
 
     names, errors = check_gradient(comp, fd='central', step_size=1e-8, tol=1e-6, display=True,
         show_missing_warnings=True, show_scaling_warnings=True, min_grad=1e-6, max_grad=1e6)
@@ -313,9 +314,9 @@ def test_AEP():
 
 if __name__ == '__main__':
 
-    # test_adjustCtCp()
+    test_adjustCtCp()
     # test_windframe()
     # test_wcent_wdiam()
     # test_overlap()
     # test_power()
-    test_AEP()
+    # test_AEP()

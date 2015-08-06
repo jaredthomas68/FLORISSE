@@ -10,8 +10,6 @@ if __name__ == "__main__":
 
     myFloris = floris_assembly_opt()
 
-    x = 0.
-    y = 250
     # define all turbine properties
     # turbineX = np.array([1164.7, 947.2,  1682.4, 1464.9, 1982.6, 2200.1, 1164.7+x, 947.2+x,  1682.4+x, 1464.9+x, 1982.6+x, 2200.1+x])
     # turbineY = np.array([1024.7, 1335.3, 1387.2, 1697.8, 2060.3, 1749.7, 1024.7+y, 1335.3+y, 1387.2+y, 1697.8+y, 2060.3+y, 1749.7+y])
@@ -28,9 +26,6 @@ if __name__ == "__main__":
     windDirs = np.array([0.])
     turbineX = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
     turbineY = np.array([1000, 1000])
-
-
-
 
     nTurbs = turbineX.size
     position = np.zeros([nTurbs, 2])

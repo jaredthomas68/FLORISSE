@@ -107,8 +107,8 @@ class floris_assembly_opt_AEP(Assembly):
         # add driver so the workflow is not overwritten later
         # self.add('driver', SLSQPdriver())
         # self.driver.gradient_options.force_fd = True
-        self.add('driver', pyOptDriver())
-        self.driver.optimizer = 'SNOPT'
+        # self.add('driver', pyOptDriver())
+        # self.driver.optimizer = 'SNOPT'
         # self.driver.pyopt_diff = True
 
         # add AEP component first so it can be connected to
@@ -204,14 +204,14 @@ class floris_assembly_opt_AEP(Assembly):
         # add AEP calculations to workflow
         self.driver.workflow.add(['floris_AEP', 'floris_dist_const'])
         # set up driver
-        self.driver.iprint = 3
-        self.driver.accuracy = 1.0e-12
-        self.driver.maxiter = 100
-        self.driver.add_objective('-floris_AEP.AEP')
-        self.driver.add_parameter('turbineX', low=7*126.4, high=np.sqrt(self.nTurbines)*7*126.4)
-        self.driver.add_parameter('turbineY', low=7*126.4, high=np.sqrt(self.nTurbines)*7*126.4)
+        # self.driver.iprint = 3
+        # self.driver.accuracy = 1.0e-12
+        # self.driver.maxiter = 100
+        # self.driver.add_objective('-floris_AEP.AEP')
+        # self.driver.add_parameter('turbineX', low=7*126.4, high=np.sqrt(self.nTurbines)*7*126.4)
+        # self.driver.add_parameter('turbineY', low=7*126.4, high=np.sqrt(self.nTurbines)*7*126.4)
         # self.driver.add_parameter('yaw', low=-30., high=30., scaler=1)
-        self.driver.add_constraint('floris_dist_const.separation > 2*rotorDiameter[0]')
+        # self.driver.add_constraint('floris_dist_const.separation > 2*rotorDiameter[0]')
 
 
 class floris_assembly_opt(Assembly):
@@ -224,7 +224,7 @@ class floris_assembly_opt(Assembly):
     # Flow property variables
     wind_speed = Float(iotype='in', units='m/s', desc='free stream wind velocity')
     air_density = Float(iotype='in', units='kg/(m*m*m)', desc='air density in free stream')
-    wind_direction = Float(iotype='in', units='deg', desc='overall wind direction for wind farm')
+    wind_direction = Float(iotype='in', units='deg', desc='overall wind direction for wind farm using deg. from E. ccw')
 
     # output
     power = Float(iotype='out', units='kW', desc='total windfarm power')
@@ -376,6 +376,9 @@ class floris_assembly(Assembly):
     # original input variables in Pieter's OpenMDAO stand-alone version of FLORIS
     parameters = VarTree(FLORISParameters(), iotype='in')
     verbose = Bool(False, iotype='in', desc='verbosity of FLORIS, False is no output')
+
+    # input
+    wind_direction = Float(iotype='in', units='deg', desc='wind direction to, using deg. ccw from east')
 
     # final output
     power = Float(iotype='out', units='kW', desc='total windfarm power')

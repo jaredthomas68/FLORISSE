@@ -18,6 +18,8 @@ class floris_assembly_opt(Assembly):
     # original input variables in Pieter's OpenMDAO stand-alone version of FLORIS
     parameters = VarTree(FLORISParameters(), iotype='in')
     verbose = Bool(False, iotype='in', desc='verbosity of FLORIS, False is no output')
+    wind_direction = Float(iotype='in', units='deg', desc='overall wind direction for wind farm using deg. from E. ccw')
+
 
     # final output
     power = Float(iotype='out', units='kW', desc='total windfarm power')

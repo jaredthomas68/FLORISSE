@@ -165,7 +165,7 @@ class floris_windframe(Component):
 
     # flow property variables
     wind_speed = Float(iotype='in', units='m/s', desc='free stream wind velocity')
-    wind_direction = Float(iotype='in', units='deg', desc='overall wind direction for wind farm')
+    wind_direction = Float(iotype='in', units='deg', desc='wind direction using direction to, in deg. ccw from east')
 
 
     def __init__(self, nTurbines, resolution):

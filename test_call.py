@@ -15,6 +15,8 @@ if __name__ == "__main__":
 
     optimize_position = True
     optimize_yaw = True
+    print 'optimize_position = ', optimize_position
+    print 'optimize_yaw = ', optimize_yaw
 
     # windrose for test case from Pieter
     # dirPercent = np.array([ 0.0103304391513755,0.0101152216690551,0.0099087885737683,0.00971061280229294,
@@ -32,7 +34,7 @@ if __name__ == "__main__":
     #            0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
 
     # simple small windrose for testing
-    dirPercent = np.array([.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1])
+    dirPercent = np.array([.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1, 0.1])
 
     # single direction
     # dirPercent = np.array([1.0])

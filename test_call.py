@@ -10,7 +10,7 @@ import math as m
 if __name__ == "__main__":
 
     rotor_diameter = 126.4
-    nRows = 4.
+    nRows = 2.
     spacing = 7.
 
     optimize_position = True
@@ -34,10 +34,12 @@ if __name__ == "__main__":
     #            0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
 
     # simple small windrose for testing
-    dirPercent = np.array([.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1, 0.1])
+    # dirPercent = np.array([.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1, 0.1])
+    dirPercent = np.array([0.1, 0.8, 0.1, 0.1])
 
     # single direction
-    # dirPercent = np.array([1.0])
+    # dirPercent = np.array([1.0, ])
+
 
 
     nDirections = len(dirPercent)
@@ -88,7 +90,7 @@ if __name__ == "__main__":
         Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2.)
         generator_efficiency[turbI] = 0.944
         # yaw[turbI] = 25.
-        yaw[turbI] = 0.
+        yaw[turbI] = 10.
 
     # myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=0)
     myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=nDirections, optimize_position=optimize_position,
@@ -204,6 +206,7 @@ if __name__ == "__main__":
     myFloris2.wind_speed = myFloris.wind_speed # m/s
     myFloris2.air_density = myFloris.air_density  # kg/m^3
     myFloris2.wind_direction = myFloris.windrose_directions[np.argmax(myFloris.windrose_frequencies)]  # deg
+    print myFloris2.wind_direction
     # print np.argmax(myFloris.windrose_frequencies)
     # myFloris2.verbose = True
 

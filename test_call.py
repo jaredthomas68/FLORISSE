@@ -10,28 +10,34 @@ import math as m
 if __name__ == "__main__":
 
     rotor_diameter = 126.4
-    nRows = 1.
+    nRows = 4.
     spacing = 7.
 
+    optimize_position = True
+    optimize_yaw = True
+
     # windrose for test case from Pieter
-    # windDirs = np.arange(0.0, 360.0, 5.0)
+    # dirPercent = np.array([ 0.0103304391513755,0.0101152216690551,0.0099087885737683,0.00971061280229294,
+    #            0.00952020862969896,0.00933712769451244,0.00916095547386126,0.00899130815027124,0.00882782982026631,
+    #            0.00867019000204726,0.00882782982026631,0.00899130815027124,0.00916095547386126,0.00933712769451244,
+    #            0.00952020862969896,0.00971061280229294,0.0099087885737683,0.0101152216690551,0.0103304391513755,
+    #            0.0105550139155358,0.0107895697803255,0.0110347872753329,0.0112914102352243,0.011560253336063,
+    #            0.0118422107345036,0.0121382660028662,0.0124495035926833,0.0127771221082802,0.0131224497328283,0.0134869622254069,
+    #            0.0138723040032756,0.0142803129445484,0.0147130497004438,0.0151728325035827,0.0156622787133757,0.0161843546704882,
+    #            0.0167424358660223,0.0173403800040945,0.0179826163005425,0.0186742553890249,0.0194212256045859,0.0202304433381103,
+    #            0.0211100278310716,0.0220695745506658,0.023120506672126,0.0242765320057323,0.023120506672126,0.0220695745506658,
+    #            0.0211100278310716,0.0202304433381103,0.0194212256045859,0.0186742553890249,0.0179826163005425,0.0173403800040945,
+    #            0.0167424358660223,0.0161843546704882,0.0156622787133757,0.0151728325035827,0.0147130497004438,0.0142803129445484,
+    #            0.0138723040032756,0.0134869622254069,0.0131224497328283,0.0127771221082802,0.0124495035926833,0.0121382660028662,
+    #            0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
 
-    dirPercent = np.array([ 0.0103304391513755,0.0101152216690551,0.0099087885737683,0.00971061280229294,
-               0.00952020862969896,0.00933712769451244,0.00916095547386126,0.00899130815027124,0.00882782982026631,
-               0.00867019000204726,0.00882782982026631,0.00899130815027124,0.00916095547386126,0.00933712769451244,
-               0.00952020862969896,0.00971061280229294,0.0099087885737683,0.0101152216690551,0.0103304391513755,
-               0.0105550139155358,0.0107895697803255,0.0110347872753329,0.0112914102352243,0.011560253336063,
-               0.0118422107345036,0.0121382660028662,0.0124495035926833,0.0127771221082802,0.0131224497328283,0.0134869622254069,
-               0.0138723040032756,0.0142803129445484,0.0147130497004438,0.0151728325035827,0.0156622787133757,0.0161843546704882,
-               0.0167424358660223,0.0173403800040945,0.0179826163005425,0.0186742553890249,0.0194212256045859,0.0202304433381103,
-               0.0211100278310716,0.0220695745506658,0.023120506672126,0.0242765320057323,0.023120506672126,0.0220695745506658,
-               0.0211100278310716,0.0202304433381103,0.0194212256045859,0.0186742553890249,0.0179826163005425,0.0173403800040945,
-               0.0167424358660223,0.0161843546704882,0.0156622787133757,0.0151728325035827,0.0147130497004438,0.0142803129445484,
-               0.0138723040032756,0.0134869622254069,0.0131224497328283,0.0127771221082802,0.0124495035926833,0.0121382660028662,
-               0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
+    # simple small windrose for testing
+    dirPercent = np.array([.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1])
 
-    # dirPercent = np.array([.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.4])
-    dirPercent = np.array([1.0])
+    # single direction
+    # dirPercent = np.array([1.0])
+
+
     nDirections = len(dirPercent)
 
     points = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
@@ -52,8 +58,8 @@ if __name__ == "__main__":
     # turbineX = np.array([1164.7, 947.2,  1682.4, 1464.9, 1982.6, 2200.1])
     # turbineY = np.array([1024.7, 1335.3, 1387.2, 1697.8, 2060.3, 1749.7])
 
-    print turbineX.size, turbineX
-    print turbineY.size, turbineY
+    # print turbineX.size, turbineX
+    # print turbineY.size, turbineY
 
     nTurbs = turbineX.size
     # position = np.zeros([nTurbs, 2])
@@ -83,7 +89,8 @@ if __name__ == "__main__":
         yaw[turbI] = 0.
 
     # myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=0)
-    myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=nDirections, resolution=0.0)
+    myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=nDirections, optimize_position=optimize_position,
+                                       resolution=0.0, optimize_yaw=optimize_yaw)
 
     # myFloris.position = position
     myFloris.turbineX = turbineX
@@ -95,7 +102,17 @@ if __name__ == "__main__":
     myFloris.Ct = Ct
     myFloris.Cp = Cp
     myFloris.generator_efficiency = generator_efficiency
-    myFloris.yaw = yaw
+
+    if optimize_yaw:
+        # myFloris.yaw = np.tile(yaw, nDirections)
+        yaw = np.tile(yaw, (nDirections, 1))
+        # print yaw
+        for direction in range(0, nDirections):
+            exec('myFloris.yaw_%d = yaw[%d]' % (direction, direction))
+            # exec('print myFloris.yaw_%d' % direction)
+            # print myFloris.yaw_0, myFloris.yaw_1, myFloris.yaw_2, myFloris.yaw_3
+    else:
+        myFloris.yaw = yaw
     # myFloris.yaw = yaw
 
     # Define flow properties
@@ -110,14 +127,14 @@ if __name__ == "__main__":
     myFloris.windrose_directions = 270. - np.arange(0.0, 360.0, 360.0/nDirections)
     # myFloris.windrose_directions = np.array([30.0])
     # myFloris.windrose_directions = 270 - windDirs
-    print myFloris.windrose_directions
+    # print myFloris.windrose_directions
     for i in range(0, nDirections):
         if myFloris.windrose_directions[i] < 0.:
             myFloris.windrose_directions[i] += 360.
 
     myFloris.parameters.CPcorrected = False
     myFloris.parameters.CTcorrected = False
-    myFloris.parameters.FLORISoriginal = True
+    myFloris.parameters.FLORISoriginal = False
 
     # define sampling points for optimization run (GenericFlowModel)
     # resolution = 0.
@@ -153,7 +170,12 @@ if __name__ == "__main__":
     print 'power of each turbine (kW): %s' % myFloris.floris_power_0.wt_power
     print 'turbine X positions in wind frame (m): %s' % myFloris.turbineX
     print 'turbine Y positions in wind frame (m): %s' % myFloris.turbineY
-    print 'yaw (deg) = ', myFloris.yaw
+    if optimize_yaw:
+        for direction in range(0, nDirections):
+            print 'yaw for wind direction %d deg. (deg.):' % myFloris.windrose_directions[direction]
+            exec('print myFloris.yaw_%d' % direction)
+    else:
+        print 'yaw (deg) = ', myFloris.yaw
     print 'AEP (kWh): %s' % myFloris.AEP
 
     resolution = 200
@@ -167,7 +189,14 @@ if __name__ == "__main__":
     myFloris2.Ct = Ct
     myFloris2.Cp = Cp
     myFloris2.generator_efficiency = generator_efficiency
-    myFloris2.yaw = myFloris.yaw
+    pri_dir_ind = np.argmax(myFloris.windrose_frequencies)
+    print pri_dir_ind
+    if optimize_yaw:
+        # myFloris2.yaw = myFloris.yaw[pri_dir_ind*nTurbs:(pri_dir_ind+1)*nTurbs]
+        exec('myFloris2.yaw = myFloris.yaw_%d' % pri_dir_ind)
+        # print myFloris2.yaw
+    else:
+        myFloris2.yaw = myFloris.yaw
 
     # # Define flow properties
     myFloris2.wind_speed = myFloris.wind_speed # m/s
@@ -224,10 +253,10 @@ if __name__ == "__main__":
     ax1.autoscale(tight=True)
 
     for turbI in range(0, nTurbs):
-        dx = 0.5*rotorDiameter[turbI]*np.sin((myFloris.yaw[turbI]+myFloris.windrose_directions[
-            np.argmax(dirPercent)])*np.pi/180)
-        dy = 0.5*rotorDiameter[turbI]*np.cos((myFloris.yaw[turbI]+myFloris.windrose_directions[
-            np.argmax(dirPercent)])*np.pi/180)
+        dx = 0.5*rotorDiameter[turbI]*np.sin((myFloris2.yaw[turbI]+myFloris.windrose_directions[
+            np.argmax(dirPercent)])*np.pi/180.)
+        dy = 0.5*rotorDiameter[turbI]*np.cos((myFloris2.yaw[turbI]+myFloris.windrose_directions[
+            np.argmax(dirPercent)])*np.pi/180.)
         plt.plot([myFloris2.turbineX[turbI]-dx, myFloris2.turbineX[turbI]+dx], [myFloris2.turbineY[turbI]+dy, myFloris2.turbineY[turbI]-dy],
                  solid_capstyle='butt', lw=4, c='k')
 

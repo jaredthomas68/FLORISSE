@@ -635,4 +635,5 @@ class floris_power(Component):
         # construct total Jacobian of floris_power
         J = np.vstack((dvelocitiesTurbines, dwt_power, dpower))
         # print 'power J = ', J
+        # print 'in J'
         return J

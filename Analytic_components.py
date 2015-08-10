@@ -112,10 +112,10 @@ class floris_adjustCtCp(Component):
         axialIndProvided = self.parameters.axialIndProvided
 
         if not CTcorrected:
-
+            # print Ct.size, yaw.size
             self.Ct_out = Ct*np.cos(yaw)*np.cos(yaw)
             dCt_dCt = np.eye(nTurbines)*np.cos(yaw)*np.cos(yaw)
-            dCt_dyaw = np.eye(nTurbines)*(-2*Ct*np.sin(yaw)*np.cos(yaw))*np.pi/180.
+            dCt_dyaw = np.eye(nTurbines)*(-2.*Ct*np.sin(yaw)*np.cos(yaw))*np.pi/180.
             dCt_dCp = np.zeros((nTurbines, nTurbines))
             dCt = np.hstack((dCt_dCt, dCt_dCp, dCt_dyaw))
 
@@ -147,12 +147,9 @@ class floris_adjustCtCp(Component):
         self.J = np.vstack((dCt, dCp))
 
     def list_deriv_vars(self):
-
         return ('Ct_in', 'Cp_in', 'yaw'), ('Ct_out', 'Cp_out')
 
-
     def provideJ(self):
-
         return self.J
 
 
@@ -166,7 +163,6 @@ class floris_windframe(Component):
     # flow property variables
     wind_speed = Float(iotype='in', units='m/s', desc='free stream wind velocity')
     wind_direction = Float(iotype='in', units='deg', desc='wind direction using direction to, in deg. ccw from east')
-
 
     def __init__(self, nTurbines, resolution):
 
@@ -202,7 +198,6 @@ class floris_windframe(Component):
                                     desc='x coordinates of turbines in wind dir. ref. frame'))
         self.add('turbineYw', Array(np.zeros(nTurbines), iotype='out', units='m', \
                                     desc='y coordinates of turbines in wind dir. ref. frame'))
-
 
     def execute(self):
 

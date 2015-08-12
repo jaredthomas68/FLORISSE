@@ -350,13 +350,13 @@ class floris_windframe(Component):
         return J
 
 
-class floris_AEP(Component):
+class AEP(Component):
 
     AEP = Float(iotype='out', units='kW', desc='total annual energy output of wind farm')
 
     def __init__(self, nDirections):
 
-        super(floris_AEP, self).__init__()
+        super(AEP, self).__init__()
 
         self.add('power_directions', Array(np.zeros(nDirections), iotype='in', units='kW', desc='vector containing \
                                            the power production at each wind direction ccw from north'))
@@ -405,7 +405,7 @@ class floris_AEP(Component):
         return J
 
 
-class floris_dist_const(Component):
+class dist_const(Component):
 
     parameters = VarTree(FLORISParameters(), iotype='in')
 
@@ -413,7 +413,7 @@ class floris_dist_const(Component):
 
         # print 'entering wcent_wdiam __init__ - Tapenade'
 
-        super(floris_dist_const, self).__init__()
+        super(dist_const, self).__init__()
 
         # Explicitly size input arrays
         self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', \

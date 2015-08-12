@@ -1,6 +1,6 @@
 from openmdao.main.api import Assembly
 from openmdao.lib.datatypes.api import Array, Bool, Float, VarTree
-from openmdao.lib.drivers.api import SLSQPdriver, COBYLAdriver
+from openmdao.lib.drivers.api import FixedPointIterator, SLSQPdriver, COBYLAdriver
 from pyopt_driver.pyopt_driver import pyOptDriver
 from openmdao.lib.casehandlers.listcase import ListCaseIterator
 from Parameters import FLORISParameters
@@ -16,13 +16,16 @@ import numpy as np
 # ###########    imports for smooth model with analytic gradients    ##################################################
 from Analytic_components import floris_adjustCtCp
 from Analytic_components import floris_windframe
-from Analytic_components import floris_AEP
-from Analytic_components import floris_dist_const
+from Analytic_components import AEP
+from Analytic_components import dist_const
 
 # ###########    imports for smooth model with Tapenade provided gradients    #########################################
 from Tapenade_components import floris_wcent_wdiam
 from Tapenade_components import floris_overlap
 from Tapenade_components import floris_power
+
+# ###########    imports for rotor modeling    ########################################################################
+from rotor_components import *
 
 # ###########    imports for Fortran components (no provided gradient)    #############################################
 # from Fortran_components import floris_wcent_wdiam
@@ -47,7 +50,8 @@ class floris_assembly_opt_AEP(Assembly):
     AEP = Float(iotype='out', units='kW', desc='total windfarm AEP')
 
     # def __init__(self, turbineX, turbineY, yaw, resolution):
-    def __init__(self, nTurbines, nDirections, optimize_position=False, resolution=0., optimize_yaw=False):
+    def __init__(self, nTurbines, nDirections, optimize_position=False, resolution=0., optimize_yaw=False,
+                 use_rotor_components=False, datasize=0):
 
         super(floris_assembly_opt_AEP, self).__init__()
 
@@ -56,15 +60,26 @@ class floris_assembly_opt_AEP(Assembly):
         self.nDirections = nDirections
         self.optimize_yaw = optimize_yaw
         self.optimize_position = optimize_position
+        self.use_rotor_components = use_rotor_components
+        self.datasize = datasize
 
         # wt_layout input variables
         self.add('rotorDiameter', Array(np.zeros(nTurbines), dtype='float', iotype='in', units='m',
                                         desc='rotor diameters of all turbine'))
         self.add('axialInduction', Array(np.zeros(nTurbines), iotype='in', dtype='float',
                                          desc='axial induction of all turbines'))
-        self.add('Ct', Array(np.zeros(nTurbines), iotype='in', desc='Thrust coefficient for all turbines'))
-        self.add('Cp', Array(np.zeros(nTurbines), iotype='in', dtype='float',
-                             desc='power coefficient for all turbines'))
+        if use_rotor_components:
+            # turbine properties for ccblade and pre-calculated controller
+            # self.add('windSpeedToCPCT', VarTree(windSpeedToCPCT(datasize), iotype='in', desc='pre-calculated CPCT'))
+            self.add('curve_CP', Array(np.zeros(datasize), iotype='in', desc='pre-calculated CPCT'))
+            self.add('curve_CT', Array(np.zeros(datasize), iotype='in', desc='pre-calculated CPCT'))
+            self.add('curve_wind_speed', Array(np.zeros(datasize), iotype='in', desc='pre-calculated CPCT'))
+            self.add('initVelocitiesTurbines', Array(np.zeros(nTurbines), iotype='in', units='m/s'))
+            # print 'in assembly', self.windSpeedToCPCT.CP.size, self.windSpeedToCPCT.CT.size, self.windSpeedToCPCT.wind_speed.size
+        else:
+            self.add('Ct', Array(np.zeros(nTurbines), iotype='in', desc='Thrust coefficient for all turbines'))
+            self.add('Cp', Array(np.zeros(nTurbines), iotype='in', dtype='float',
+                                 desc='power coefficient for all turbines'))
         self.add('generator_efficiency', Array(np.zeros(nTurbines), iotype='in', dtype='float',
                                                desc='generator efficiency of all turbines'))
         self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', dtype='float',
@@ -106,21 +121,23 @@ class floris_assembly_opt_AEP(Assembly):
         # standard output
         self.add('velocitiesTurbines_directions', Array(np.zeros([nDirections, nTurbines]), iotype='out', units='m/s',
                                                         dtype='float', desc='effective windspeed at each turbine \
-                                                        in each direction cw from north using direction from'))
+                                                        in each direction ccw from east using direction to'))
         self.add('wt_power_directions', Array(np.zeros([nDirections, nTurbines]), iotype='out', units='kW',
-                                              dtype='float', desc='power of each turbine in each direction cw from \
-                                              north using direction from'))
+                                              dtype='float', desc='power of each turbine in each direction ccw from \
+                                              east using direction to'))
         self.add('power_directions', Array(np.zeros(nDirections), iotype='out', units='kW', desc='total windfarm power \
-                                           in each direction cw from north using direction from'))
+                                           in each direction ccw from east using direction to'))
 
     def configure(self):
 
-
+        # rename options
         nTurbines = self.nTurbines
         nDirections = self.nDirections
         optimize_position = self.optimize_position
         resolution = self.resolution
         optimize_yaw = self.optimize_yaw
+        use_rotor_components = self.use_rotor_components
+        datasize = self.datasize
 
         # add driver so the workflow is not overwritten later
         if optimize_position or optimize_yaw:
@@ -131,13 +148,14 @@ class floris_assembly_opt_AEP(Assembly):
             # self.driver.pyopt_diff = True
 
         # add AEP component first so it can be connected to
-        F6 = self.add('floris_AEP', floris_AEP(nDirections=nDirections))
+        F6 = self.add('floris_AEP', AEP(nDirections=nDirections))
         F6.missing_deriv_policy = 'assume_zero'
         self.connect('windrose_frequencies', 'floris_AEP.windrose_frequencies')
         self.connect('floris_AEP.AEP', 'AEP')
         self.connect('floris_AEP.power_directions_out', 'power_directions')
 
-        F7 = self.add('floris_dist_const', floris_dist_const(nTurbines=nTurbines))
+        # set up constraints
+        self.add('floris_dist_const', dist_const(nTurbines=nTurbines))
         self.connect('turbineX', 'floris_dist_const.turbineX')
         self.connect('turbineY', 'floris_dist_const.turbineY')
 
@@ -147,19 +165,40 @@ class floris_assembly_opt_AEP(Assembly):
 
             print 'i = %s' % i
 
-            # add components to floris assembly
-            F1 = self.add('floris_adjustCtCp_%d' % i, floris_adjustCtCp(nTurbines=nTurbines))
+            # add CpCt method
+            if use_rotor_components:
+                # add fixed point iterator
+                self.add('FPIdriver_%d' % i, FixedPointIterator())
+                self.add('rotor_CPCT_%d' % i, CPCT_Interpolate(nTurbines=self.nTurbines, datasize=self.datasize))
+            else:
+                self.add('floris_adjustCtCp_%d' % i, floris_adjustCtCp(nTurbines=nTurbines))
+
+            # add components of floris to assembly
             F2 = self.add('floris_windframe_%d' % i, floris_windframe(nTurbines=nTurbines,
                                                                  resolution=resolution))
             F2.missing_deriv_policy = 'assume_zero'
-            F3 = self.add('floris_wcent_wdiam_%d' % i, floris_wcent_wdiam(nTurbines=nTurbines))
+            self.add('floris_wcent_wdiam_%d' % i, floris_wcent_wdiam(nTurbines=nTurbines))
             F4 = self.add('floris_overlap_%d' % i, floris_overlap(nTurbines=nTurbines))
             F4.missing_deriv_policy = 'assume_zero'
-            F5 = self.add('floris_power_%d' % i, floris_power(nTurbines=nTurbines))
+            self.add('floris_power_%d' % i, floris_power(nTurbines=nTurbines))
 
             # connect inputs to components
-            self.connect('parameters', ['floris_adjustCtCp_%d.parameters' % i, 'floris_wcent_wdiam_%d.parameters' % i,
+            if use_rotor_components:
+                # self.connect('initVelocitiesTurbines', ['rotor_CPCT_%d.wind_speed_hub' % i])
+                self.connect('curve_CP', 'rotor_CPCT_%d.windSpeedToCPCT.CP' % i)
+                self.connect('curve_CT', 'rotor_CPCT_%d.windSpeedToCPCT.CT' % i)
+                self.connect('curve_wind_speed', 'rotor_CPCT_%d.windSpeedToCPCT.wind_speed' % i)
+                # self.connect('windSpeedToCPCT', 'rotor_CPCT_%d.windSpeedToCPCT' % i)
+                # self.connect('windSpeedToCPCT.CT', 'rotor_CPCT_%d.windSpeedToCPCT.CT' % i)
+                # self.connect('windSpeedToCPCT.wind_speed', 'rotor_CPCT_%d.windSpeedToCPCT.wind_speed' % i)
+                self.connect('parameters.pP', 'rotor_CPCT_%d.pP' % i)
+                self.connect('parameters', ['floris_wcent_wdiam_%d.parameters' % i, 'floris_power_%d.parameters' % i])
+            else:
+                self.connect('parameters', ['floris_adjustCtCp_%d.parameters' % i, 'floris_wcent_wdiam_%d.parameters' % i,
                                         'floris_power_%d.parameters' % i])
+                self.connect('Ct', 'floris_adjustCtCp_%d.Ct_in' % i)
+                self.connect('Cp', 'floris_adjustCtCp_%d.Cp_in' % i)
+
             self.connect('verbose', ['floris_windframe_%d.verbose' % i, 'floris_wcent_wdiam_%d.verbose' % i,
                                      'floris_power_%d.verbose' % i])
             self.connect('turbineX', 'floris_windframe_%d.turbineX' % i)
@@ -167,8 +206,6 @@ class floris_assembly_opt_AEP(Assembly):
             self.connect('rotorDiameter', ['floris_wcent_wdiam_%d.rotorDiameter' % i,
                                            'floris_overlap_%d.rotorDiameter' % i, 'floris_power_%d.rotorDiameter' % i])
             self.connect('axialInduction', 'floris_power_%d.axialInduction' % i)
-            self.connect('Ct', 'floris_adjustCtCp_%d.Ct_in' % i)
-            self.connect('Cp', 'floris_adjustCtCp_%d.Cp_in' % i)
             self.connect('generator_efficiency', 'floris_power_%d.generator_efficiency' % i)
 
             if optimize_yaw:
@@ -177,13 +214,21 @@ class floris_assembly_opt_AEP(Assembly):
                 #                      'floris_power_%d.yaw[%d]' % (i, j)])
                 # self.connect('yaw[%d*%d:%d*%d:1]' % (i, nTurbines, i+1, nTurbines), ['floris_adjustCtCp_%d.yaw' % i, 'floris_wcent_wdiam_%d.yaw' % i,
                 #                  'floris_power_%d.yaw' % i])
-                self.connect('yaw_%d' % i, ['floris_adjustCtCp_%d.yaw' % i, 'floris_wcent_wdiam_%d.yaw' % i,
+                if use_rotor_components:
+                    self.connect('yaw_%d' % i, ['rotor_CPCT_%d.yaw' % i, 'floris_wcent_wdiam_%d.yaw' % i,
+                                 'floris_power_%d.yaw' % i])
+                else:
+                    self.connect('yaw_%d' % i, ['floris_adjustCtCp_%d.yaw' % i, 'floris_wcent_wdiam_%d.yaw' % i,
                                  'floris_power_%d.yaw' % i])
 
                 # print self.yaw[i*nTurbines:(i+1)*nTurbines]
             else:
-                self.connect('yaw', ['floris_adjustCtCp_%d.yaw' % i, 'floris_wcent_wdiam_%d.yaw' % i,
-                                     'floris_power_%d.yaw' % i])
+                if use_rotor_components:
+                    self.connect('yaw', ['rotor_CPCT_%d.yaw' % i, 'floris_wcent_wdiam_%d.yaw' % i,
+                                 'floris_power_%d.yaw' % i])
+                else:
+                    self.connect('yaw', ['floris_adjustCtCp_%d.yaw' % i, 'floris_wcent_wdiam_%d.yaw' % i,
+                                 'floris_power_%d.yaw' % i])
 
             self.connect('wind_speed', 'floris_power_%d.wind_speed' % i)
             self.connect('air_density', 'floris_power_%d.air_density' % i)
@@ -194,16 +239,23 @@ class floris_assembly_opt_AEP(Assembly):
                 self.connect('yaw_%d' % i, 'floris_windframe_%d.yaw' % i)
             else:
                 self.connect('yaw', 'floris_windframe_%d.yaw' % i)
-            self.connect('floris_adjustCtCp_%d.Ct_out' % i, 'floris_windframe_%d.Ct' % i)
-            self.connect('floris_adjustCtCp_%d.Cp_out' % i, 'floris_windframe_%d.Cp' % i)
+            if use_rotor_components:
+                self.connect('rotor_CPCT_%d.CT' % i, 'floris_windframe_%d.Ct' % i)
+                self.connect('rotor_CPCT_%d.CP' % i, 'floris_windframe_%d.Cp' % i)
+            else:
+                self.connect('floris_adjustCtCp_%d.Ct_out' % i, 'floris_windframe_%d.Ct' % i)
+                self.connect('floris_adjustCtCp_%d.Cp_out' % i, 'floris_windframe_%d.Cp' % i)
             self.connect('wind_speed', 'floris_windframe_%d.wind_speed' % i)
             self.connect('axialInduction', 'floris_windframe_%d.axialInduction' % i)
 
             # ############### Connections between components ##################
-            # connections from CtCp adjustment to others
-            self.connect('floris_adjustCtCp_%d.Ct_out' % i, ['floris_wcent_wdiam_%d.Ct' % i, 'floris_power_%d.Ct' % i])
-            self.connect('floris_adjustCtCp_%d.Cp_out' % i, 'floris_power_%d.Cp' % i)
-
+            # connections from CtCp calculation to other components
+            if use_rotor_components:
+                self.connect('rotor_CPCT_%d.CT' % i, ['floris_wcent_wdiam_%d.Ct' % i, 'floris_power_%d.Ct' % i])
+                self.connect('rotor_CPCT_%d.CT' % i, 'floris_power_%d.Cp' % i)
+            else:
+                self.connect('floris_adjustCtCp_%d.Ct_out' % i, ['floris_wcent_wdiam_%d.Ct' % i, 'floris_power_%d.Ct' % i])
+                self.connect('floris_adjustCtCp_%d.Cp_out' % i, 'floris_power_%d.Cp' % i)
 
             # connections from floris_windframe to floris_wcent_wdiam
             self.connect('floris_windframe_%d.turbineXw' % i, 'floris_wcent_wdiam_%d.turbineXw' % i)
@@ -233,7 +285,15 @@ class floris_assembly_opt_AEP(Assembly):
             # self.connect('floris_power_%d.power' % i, 'power_directions[%d]' % i)
 
             # add to workflow
-            self.driver.workflow.add(['floris_adjustCtCp_%d' % i, 'floris_windframe_%d' % i,
+            if use_rotor_components:
+                exec("self.FPIdriver_%d.workflow.add(['rotor_CPCT_%d', 'floris_windframe_%d', \
+                     'floris_wcent_wdiam_%d', 'floris_overlap_%d', 'floris_power_%d'])" % (i, i, i, i, i, i))
+                exec("self.FPIdriver_%d.add_parameter('rotor_CPCT_%d.wind_speed_hub', low=0., high=100.)" % (i, i))
+                exec("self.FPIdriver_%d.add_constraint('rotor_CPCT_%d.wind_speed_hub = \
+                      floris_power_%d.velocitiesTurbines')" % (i, i, i))
+                self.driver.workflow.add('FPIdriver_%d' % i)
+            else:
+                self.driver.workflow.add(['floris_adjustCtCp_%d' % i, 'floris_windframe_%d' % i,
                                       'floris_wcent_wdiam_%d' % i, 'floris_overlap_%d' % i, 'floris_power_%d' % i])
 
         # add AEP calculations to workflow

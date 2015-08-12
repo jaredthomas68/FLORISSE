@@ -6,39 +6,43 @@ import time
 import numpy as np
 import math as m
 
+from rotor_components import *
+import cPickle as pickle
+
 
 if __name__ == "__main__":
 
     rotor_diameter = 126.4
-    nRows = 2.
+    nRows = 3.
     spacing = 7.
 
     optimize_position = True
     optimize_yaw = True
+    use_rotor_components = True
     print 'optimize_position = ', optimize_position
     print 'optimize_yaw = ', optimize_yaw
 
     # windrose for test case from Pieter
-    # dirPercent = np.array([ 0.0103304391513755,0.0101152216690551,0.0099087885737683,0.00971061280229294,
-    #            0.00952020862969896,0.00933712769451244,0.00916095547386126,0.00899130815027124,0.00882782982026631,
-    #            0.00867019000204726,0.00882782982026631,0.00899130815027124,0.00916095547386126,0.00933712769451244,
-    #            0.00952020862969896,0.00971061280229294,0.0099087885737683,0.0101152216690551,0.0103304391513755,
-    #            0.0105550139155358,0.0107895697803255,0.0110347872753329,0.0112914102352243,0.011560253336063,
-    #            0.0118422107345036,0.0121382660028662,0.0124495035926833,0.0127771221082802,0.0131224497328283,0.0134869622254069,
-    #            0.0138723040032756,0.0142803129445484,0.0147130497004438,0.0151728325035827,0.0156622787133757,0.0161843546704882,
-    #            0.0167424358660223,0.0173403800040945,0.0179826163005425,0.0186742553890249,0.0194212256045859,0.0202304433381103,
-    #            0.0211100278310716,0.0220695745506658,0.023120506672126,0.0242765320057323,0.023120506672126,0.0220695745506658,
-    #            0.0211100278310716,0.0202304433381103,0.0194212256045859,0.0186742553890249,0.0179826163005425,0.0173403800040945,
-    #            0.0167424358660223,0.0161843546704882,0.0156622787133757,0.0151728325035827,0.0147130497004438,0.0142803129445484,
-    #            0.0138723040032756,0.0134869622254069,0.0131224497328283,0.0127771221082802,0.0124495035926833,0.0121382660028662,
-    #            0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
+    dirPercent = np.array([ 0.0103304391513755,0.0101152216690551,0.0099087885737683,0.00971061280229294,
+               0.00952020862969896,0.00933712769451244,0.00916095547386126,0.00899130815027124,0.00882782982026631,
+               0.00867019000204726,0.00882782982026631,0.00899130815027124,0.00916095547386126,0.00933712769451244,
+               0.00952020862969896,0.00971061280229294,0.0099087885737683,0.0101152216690551,0.0103304391513755,
+               0.0105550139155358,0.0107895697803255,0.0110347872753329,0.0112914102352243,0.011560253336063,
+               0.0118422107345036,0.0121382660028662,0.0124495035926833,0.0127771221082802,0.0131224497328283,0.0134869622254069,
+               0.0138723040032756,0.0142803129445484,0.0147130497004438,0.0151728325035827,0.0156622787133757,0.0161843546704882,
+               0.0167424358660223,0.0173403800040945,0.0179826163005425,0.0186742553890249,0.0194212256045859,0.0202304433381103,
+               0.0211100278310716,0.0220695745506658,0.023120506672126,0.0242765320057323,0.023120506672126,0.0220695745506658,
+               0.0211100278310716,0.0202304433381103,0.0194212256045859,0.0186742553890249,0.0179826163005425,0.0173403800040945,
+               0.0167424358660223,0.0161843546704882,0.0156622787133757,0.0151728325035827,0.0147130497004438,0.0142803129445484,
+               0.0138723040032756,0.0134869622254069,0.0131224497328283,0.0127771221082802,0.0124495035926833,0.0121382660028662,
+               0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
 
     # simple small windrose for testing
     # dirPercent = np.array([.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1, 0.1])
-    dirPercent = np.array([0.1, 0.8, 0.1, 0.1])
+    # dirPercent = np.array([0.1, 0.8, 0.1, 0.1])
 
     # single direction
-    # dirPercent = np.array([1.0, ])
+    # dirPercent = np.array([1.0])
 
 
 
@@ -66,6 +70,8 @@ if __name__ == "__main__":
     # print turbineY.size, turbineY
 
     nTurbs = turbineX.size
+    NREL5MWCPCT = pickle.load(open('NREL5MWCPCT.p'))
+    datasize = NREL5MWCPCT.CP.size
     # position = np.zeros([nTurbs, 2])
     rotorDiameter = np.zeros(nTurbs)
     axialInduction = np.zeros(nTurbs)
@@ -90,11 +96,12 @@ if __name__ == "__main__":
         Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2.)
         generator_efficiency[turbI] = 0.944
         # yaw[turbI] = 25.
-        yaw[turbI] = 10.
+        yaw[turbI] = 5.
 
     # myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=0)
     myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=nDirections, optimize_position=optimize_position,
-                                       resolution=0.0, optimize_yaw=optimize_yaw)
+                                       resolution=0.0, optimize_yaw=optimize_yaw,
+                                       use_rotor_components=use_rotor_components, datasize=datasize)
 
     # myFloris.position = position
     myFloris.turbineX = turbineX
@@ -103,16 +110,25 @@ if __name__ == "__main__":
     # myFloris.floris_windframe.turbineY = turbineY
     myFloris.rotorDiameter = rotorDiameter
     myFloris.axialInduction = axialInduction
-    myFloris.Ct = Ct
-    myFloris.Cp = Cp
+    if use_rotor_components:
+        myFloris.initVelocitiesTurbines = np.ones_like(turbineX)*myFloris.wind_speed
+        # myFloris.windSpeedToCPCT = NREL5MWCPCT
+        myFloris.curve_CP = NREL5MWCPCT.CP
+        myFloris.curve_CT = NREL5MWCPCT.CT
+        myFloris.curve_wind_speed = NREL5MWCPCT.wind_speed
+        # for i in range(nDirections):
+        #     exec('myFloris.rotor_CPCT_%d.wind_speed_hub = np.ones(nTurbs)*myFloris.wind_speed' % i)
+    else:
+        myFloris.Ct = Ct
+        myFloris.Cp = Cp
     myFloris.generator_efficiency = generator_efficiency
 
     if optimize_yaw:
         # myFloris.yaw = np.tile(yaw, nDirections)
         yaw = np.tile(yaw, (nDirections, 1))
         # print yaw
-        for direction in range(0, nDirections):
-            exec('myFloris.yaw_%d = yaw[%d]' % (direction, direction))
+        for i in range(0, nDirections):
+            exec('myFloris.yaw_%d = yaw[%d]' % (i, i))
             # exec('print myFloris.yaw_%d' % direction)
             # print myFloris.yaw_0, myFloris.yaw_1, myFloris.yaw_2, myFloris.yaw_3
     else:
@@ -126,6 +142,7 @@ if __name__ == "__main__":
     # myFloris.wind_direction = 30.  # deg ccw from east using direction too
     myFloris.verbose = False
 
+
     # final input directions should be in the order corresponding to the frequencies provided and use
     # 0 deg = E progressing ccw
     myFloris.windrose_directions = 270. - np.arange(0.0, 360.0, 360.0/nDirections)
@@ -138,6 +155,7 @@ if __name__ == "__main__":
 
     myFloris.parameters.CPcorrected = False
     myFloris.parameters.CTcorrected = False
+    myFloris.parameters.axialIndProvided = False
     myFloris.parameters.FLORISoriginal = False
 
     # define sampling points for optimization run (GenericFlowModel)
@@ -206,7 +224,7 @@ if __name__ == "__main__":
     myFloris2.wind_speed = myFloris.wind_speed # m/s
     myFloris2.air_density = myFloris.air_density  # kg/m^3
     myFloris2.wind_direction = myFloris.windrose_directions[np.argmax(myFloris.windrose_frequencies)]  # deg
-    print myFloris2.wind_direction
+
     # print np.argmax(myFloris.windrose_frequencies)
     # myFloris2.verbose = True
 
@@ -233,6 +251,7 @@ if __name__ == "__main__":
     np.set_printoptions(linewidth=150, precision=4)
 
     # Display returns
+    print 'Wind direction (deg., direction to, ccw from east): %s' % myFloris2.wind_direction
     # print 'turbine powers (kW): %s' % myFloris2.wt_power
     # print 'turbine powers (kW): %s' % myFloris2.wt_power
     print 'turbine powers (kW): %s' % myFloris2.wt_power

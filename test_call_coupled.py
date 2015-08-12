@@ -58,7 +58,7 @@ if __name__ == "__main__":
     else:
         wind_speed = 8.0    # m/s
     Speeds = np.ones_like(dirPercent)*wind_speed
-    nSpeeds = np.len(Speeds)
+    nSpeeds = len(Speeds)
     print nSpeeds
 
     # to make pics for Dr. Ning

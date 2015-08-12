@@ -1,5 +1,5 @@
 # from openmdao.main.api import Assembly
-from test_case_assembly_coupled import floris_assembly_opt, floris_assembly_opt_AEP
+from test_case_assembly_coupled import floris_assembly_opt_AEP
 from FLORIS_visualization import floris_assembly
 # from FLORIS_components import floris_assembly as vis_assembly
 import time
@@ -13,11 +13,11 @@ import cPickle as pickle
 if __name__ == "__main__":
 
     rotor_diameter = 126.4
-    nRows = 1.
+    nRows = 2.
     spacing = 7.
 
-    optimize_position = False
-    optimize_yaw = False
+    optimize_position = True
+    optimize_yaw = True
     use_rotor_components = True
     print 'optimize_position = ', optimize_position
     print 'optimize_yaw = ', optimize_yaw
@@ -39,10 +39,10 @@ if __name__ == "__main__":
 
     # simple small windrose for testing
     # dirPercent = np.array([.01, 0.01, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1, 0.1, 0.09, 0.05, 0.04])
-    # dirPercent = np.array([0.1, 0.8, 0.1, 0.1])
+    dirPercent = np.array([0.1, 0.8, 0.1, 0.1])
 
     # single direction
-    dirPercent = np.array([1.0])
+    # dirPercent = np.array([1.0])
 
     nDirections = len(dirPercent)
 
@@ -57,9 +57,7 @@ if __name__ == "__main__":
         wind_speed = 8.1    # m/s
     else:
         wind_speed = 8.0    # m/s
-    Speeds = np.ones_like(dirPercent)*wind_speed
-    nSpeeds = len(Speeds)
-    print nSpeeds
+    windrose_speeds = np.ones_like(dirPercent)*wind_speed
 
     # to make pics for Dr. Ning
     # turbineX = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
@@ -103,10 +101,10 @@ if __name__ == "__main__":
         Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2.)
         generator_efficiency[turbI] = 0.944
         # yaw[turbI] = 25.
-        yaw[turbI] = 0.
+        yaw[turbI] = 5.
 
     # myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=0)
-    myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=nDirections, nSpeeds=nSpeeds,
+    myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=nDirections,
                                        optimize_position=optimize_position, resolution=0.0, optimize_yaw=optimize_yaw,
                                        use_rotor_components=use_rotor_components, datasize=datasize)
 
@@ -118,11 +116,11 @@ if __name__ == "__main__":
     myFloris.rotorDiameter = rotorDiameter
     myFloris.axialInduction = axialInduction
     myFloris.generator_efficiency = generator_efficiency
-    myFloris.wind_speed = wind_speed  # m/s
+    # myFloris.wind_speed = wind_speed  # m/s
 
     if use_rotor_components:
 
-        myFloris.initVelocitiesTurbines = np.ones_like(turbineX)*myFloris.wind_speed
+        myFloris.initVelocitiesTurbines = np.ones_like(turbineX)*wind_speed
         # myFloris.windSpeedToCPCT = NREL5MWCPCT
         myFloris.curve_CP = NREL5MWCPCT.CP
         myFloris.curve_CT = NREL5MWCPCT.CT
@@ -153,6 +151,7 @@ if __name__ == "__main__":
 
     # Define flow properties
     myFloris.windrose_frequencies = dirPercent  # cw from north using direction from (standard windrose style)
+    myFloris.windrose_speeds = windrose_speeds
     myFloris.air_density = 1.1716  # kg/m^3
     myFloris.verbose = False
 
@@ -234,7 +233,7 @@ if __name__ == "__main__":
         myFloris2.yaw = myFloris.yaw
 
     # # Define flow properties
-    myFloris2.wind_speed = myFloris.wind_speed # m/s
+    myFloris2.wind_speed = myFloris.windrose_speeds[np.argmax(myFloris.windrose_frequencies)]  # m/s
     myFloris2.air_density = myFloris.air_density  # kg/m^3
     myFloris2.wind_direction = myFloris.windrose_directions[np.argmax(myFloris.windrose_frequencies)]  # deg
 

@@ -60,6 +60,9 @@ if use_rotor_components:
     myFloris.parameters.kd = 0.17
     myFloris.parameters.aU = 12.0
     myFloris.parameters.bU = 1.3
+    myFloris.parameters.initialWakeAngle = 3.0
+    myFloris.parameters.useaUbU = True
+    myFloris.useInitialWakeAngle = True
 else:
     myFloris.Ct = np.array([CT, CT])
     myFloris.Cp = np.array([CP, CP])
@@ -91,7 +94,7 @@ axes[0].plot(yawrange.transpose(), FLORISpower[:,0], 'r-', yawrange.transpose(),
 axes[0].plot(yawrange.transpose(), FLORISpower[:,1], 'b-', yawrange.transpose(), SOWFApower[:,1], 'bo')
 axes[0].plot(yawrange.transpose(), FLORISpower[:,0]+FLORISpower[:,1], 'k-', yawrange.transpose(), SOWFApower[:,0]+SOWFApower[:,1], 'ko')
 
-error_turbine2 = np.sum(np.abs(FLORISpower[:,1] - SOWFApower[:,1]))
+error_turbine2 = np.sum(np.abs(FLORISpower[:, 1] - SOWFApower[:, 1]))
 
 posrange = ICOWESdata['pos'][0]
 

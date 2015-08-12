@@ -15,7 +15,7 @@ class FLORISParameters(VariableTree):
     me = Array(np.array([-0.5, 0.22, 1.0]), iotype='in')
     MU = Array(np.array([0.5, 1.0, 5.5]), iotype='in')
     initialWakeDisplacement = Float(4.5, iotype='in')
-    initialWakeAngle = Float(0.0, iotype='in')
+    initialWakeAngle = Float(3.0, iotype='in')
 
 
     # old parameters
@@ -76,7 +76,7 @@ class FLORISParameters(VariableTree):
     CTcorrected = Bool(True, iotype='in', desc = 'CT factor already corrected by CCBlade calculation (approximately factor cos(yaw)^2)')
     CPcorrected = Bool(True, iotype='in', desc = 'CP factor already corrected by CCBlade calculation (assumed with approximately factor cos(yaw)^3)')
     # pP = Float(1.88, iotype='in')
-    axialIndProvided = Bool(True, iotype='in', desc = 'CT factor already corrected by CCBlade calculation (approximately factor cos(yaw)^2)')
+    axialIndProvided = Bool(False, iotype='in', desc = 'CT factor already corrected by CCBlade calculation (approximately factor cos(yaw)^2)')
 
     # initialWakeDisplacement = Float(4.5, iotype='in')
 

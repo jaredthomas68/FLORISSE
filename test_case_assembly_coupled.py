@@ -50,7 +50,7 @@ class floris_assembly_opt_AEP(Assembly):
     AEP = Float(iotype='out', units='kW', desc='total windfarm AEP')
 
     # def __init__(self, turbineX, turbineY, yaw, resolution):
-    def __init__(self, nTurbines, nDirections, optimize_position=False, resolution=0., optimize_yaw=False,
+    def __init__(self, nTurbines, nDirections, nSpeeds=1, optimize_position=False, resolution=0., optimize_yaw=False,
                  use_rotor_components=False, datasize=0):
 
         super(floris_assembly_opt_AEP, self).__init__()

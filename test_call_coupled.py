@@ -44,15 +44,22 @@ if __name__ == "__main__":
     # single direction
     dirPercent = np.array([1.0])
 
-
-
     nDirections = len(dirPercent)
 
+    # Set up position arrays
     points = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
     xpoints, ypoints = np.meshgrid(points, points)
-
     turbineX = np.ndarray.flatten(xpoints)
     turbineY = np.ndarray.flatten(ypoints)
+
+    # set up speed array
+    if use_rotor_components:
+        wind_speed = 8.1    # m/s
+    else:
+        wind_speed = 8.0    # m/s
+    Speeds = np.ones_like(dirPercent)*wind_speed
+    nSpeeds = np.len(Speeds)
+    print nSpeeds
 
     # to make pics for Dr. Ning
     # turbineX = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
@@ -99,14 +106,10 @@ if __name__ == "__main__":
         yaw[turbI] = 0.
 
     # myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=0)
-    myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=nDirections, optimize_position=optimize_position,
-                                       resolution=0.0, optimize_yaw=optimize_yaw,
+    myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=nDirections, nSpeeds=nSpeeds,
+                                       optimize_position=optimize_position, resolution=0.0, optimize_yaw=optimize_yaw,
                                        use_rotor_components=use_rotor_components, datasize=datasize)
 
-    if use_rotor_components:
-        myFloris.wind_speed = 8.1  # m/s
-    else:
-        myFloris.wind_speed = 8.0  # m/s
     # myFloris.position = position
     myFloris.turbineX = turbineX
     myFloris.turbineY = turbineY
@@ -114,7 +117,11 @@ if __name__ == "__main__":
     # myFloris.floris_windframe.turbineY = turbineY
     myFloris.rotorDiameter = rotorDiameter
     myFloris.axialInduction = axialInduction
+    myFloris.generator_efficiency = generator_efficiency
+    myFloris.wind_speed = wind_speed  # m/s
+
     if use_rotor_components:
+
         myFloris.initVelocitiesTurbines = np.ones_like(turbineX)*myFloris.wind_speed
         # myFloris.windSpeedToCPCT = NREL5MWCPCT
         myFloris.curve_CP = NREL5MWCPCT.CP
@@ -124,12 +131,13 @@ if __name__ == "__main__":
         myFloris.parameters.kd = 0.17
         myFloris.parameters.aU = 12.0
         myFloris.parameters.bU = 1.3
-        # for i in range(nDirections):
-        #     exec('myFloris.rotor_CPCT_%d.wind_speed_hub = np.ones(nTurbs)*myFloris.wind_speed' % i)
+        myFloris.parameters.initialWakeAngle = 3.0
+        myFloris.parameters.useaUbU = True
+        myFloris.useInitialWakeAngle = True
+
     else:
         myFloris.Ct = Ct
         myFloris.Cp = Cp
-    myFloris.generator_efficiency = generator_efficiency
 
     if optimize_yaw:
         # myFloris.yaw = np.tile(yaw, nDirections)
@@ -145,13 +153,8 @@ if __name__ == "__main__":
 
     # Define flow properties
     myFloris.windrose_frequencies = dirPercent  # cw from north using direction from (standard windrose style)
-
-
-
     myFloris.air_density = 1.1716  # kg/m^3
-    # myFloris.wind_direction = 30.  # deg ccw from east using direction too
     myFloris.verbose = False
-
 
     # final input directions should be in the order corresponding to the frequencies provided and use
     # 0 deg = E progressing ccw

@@ -16,8 +16,8 @@ import numpy as np
 # ###########    imports for smooth model with analytic gradients    ##################################################
 from Analytic_components import floris_adjustCtCp
 from Analytic_components import floris_windframe
-from Analytic_components import floris_AEP
-from Analytic_components import floris_dist_const
+from Analytic_components import AEP
+from Analytic_components import dist_const
 
 # ###########    imports for smooth model with Tapenade provided gradients    #########################################
 from Tapenade_components import floris_wcent_wdiam
@@ -131,13 +131,13 @@ class floris_assembly_opt_AEP(Assembly):
             # self.driver.pyopt_diff = True
 
         # add AEP component first so it can be connected to
-        F6 = self.add('floris_AEP', floris_AEP(nDirections=nDirections))
+        F6 = self.add('floris_AEP', AEP(nDirections=nDirections))
         F6.missing_deriv_policy = 'assume_zero'
         self.connect('windrose_frequencies', 'floris_AEP.windrose_frequencies')
         self.connect('floris_AEP.AEP', 'AEP')
         self.connect('floris_AEP.power_directions_out', 'power_directions')
 
-        F7 = self.add('floris_dist_const', floris_dist_const(nTurbines=nTurbines))
+        F7 = self.add('floris_dist_const', dist_const(nTurbines=nTurbines))
         self.connect('turbineX', 'floris_dist_const.turbineX')
         self.connect('turbineY', 'floris_dist_const.turbineY')
 

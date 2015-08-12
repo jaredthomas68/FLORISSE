@@ -252,7 +252,7 @@ class floris_assembly_opt_AEP(Assembly):
             # connections from CtCp calculation to other components
             if use_rotor_components:
                 self.connect('rotor_CPCT_%d.CT' % i, ['floris_wcent_wdiam_%d.Ct' % i, 'floris_power_%d.Ct' % i])
-                self.connect('rotor_CPCT_%d.CT' % i, 'floris_power_%d.Cp' % i)
+                self.connect('rotor_CPCT_%d.CP' % i, 'floris_power_%d.Cp' % i)
             else:
                 self.connect('floris_adjustCtCp_%d.Ct_out' % i, ['floris_wcent_wdiam_%d.Ct' % i, 'floris_power_%d.Ct' % i])
                 self.connect('floris_adjustCtCp_%d.Cp_out' % i, 'floris_power_%d.Cp' % i)
@@ -400,7 +400,6 @@ class floris_assembly_opt(Assembly):
         F4 = self.add('floris_overlap', floris_overlap(nTurbines=self.nTurbines))
         F4.missing_deriv_policy = 'assume_zero'
         F5 = self.add('floris_power', floris_power(nTurbines=self.nTurbines))
-
 
 
         self.driver.workflow.add(['floris_adjustCtCp', 'floris_windframe', 'floris_wcent_wdiam', 'floris_overlap', \

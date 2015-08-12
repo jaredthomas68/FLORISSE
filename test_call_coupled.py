@@ -13,12 +13,12 @@ import cPickle as pickle
 if __name__ == "__main__":
 
     rotor_diameter = 126.4
-    nRows = 5.
+    nRows = 1.
     spacing = 7.
 
-    optimize_position = True
+    optimize_position = False
     optimize_yaw = False
-    use_rotor_components = False
+    use_rotor_components = True
     print 'optimize_position = ', optimize_position
     print 'optimize_yaw = ', optimize_yaw
 
@@ -38,11 +38,11 @@ if __name__ == "__main__":
     #            0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
 
     # simple small windrose for testing
-    dirPercent = np.array([.01, 0.01, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1, 0.1, 0.09, 0.05, 0.04])
+    # dirPercent = np.array([.01, 0.01, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1, 0.1, 0.09, 0.05, 0.04])
     # dirPercent = np.array([0.1, 0.8, 0.1, 0.1])
 
     # single direction
-    # dirPercent = np.array([1.0])
+    dirPercent = np.array([1.0])
 
 
 
@@ -96,13 +96,17 @@ if __name__ == "__main__":
         Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2.)
         generator_efficiency[turbI] = 0.944
         # yaw[turbI] = 25.
-        yaw[turbI] = 5.
+        yaw[turbI] = 0.
 
     # myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=0)
     myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=nDirections, optimize_position=optimize_position,
                                        resolution=0.0, optimize_yaw=optimize_yaw,
                                        use_rotor_components=use_rotor_components, datasize=datasize)
 
+    if use_rotor_components:
+        myFloris.wind_speed = 8.1  # m/s
+    else:
+        myFloris.wind_speed = 8.0  # m/s
     # myFloris.position = position
     myFloris.turbineX = turbineX
     myFloris.turbineY = turbineY
@@ -116,6 +120,10 @@ if __name__ == "__main__":
         myFloris.curve_CP = NREL5MWCPCT.CP
         myFloris.curve_CT = NREL5MWCPCT.CT
         myFloris.curve_wind_speed = NREL5MWCPCT.wind_speed
+        myFloris.parameters.ke = 0.05
+        myFloris.parameters.kd = 0.17
+        myFloris.parameters.aU = 12.0
+        myFloris.parameters.bU = 1.3
         # for i in range(nDirections):
         #     exec('myFloris.rotor_CPCT_%d.wind_speed_hub = np.ones(nTurbs)*myFloris.wind_speed' % i)
     else:
@@ -137,10 +145,12 @@ if __name__ == "__main__":
 
     # Define flow properties
     myFloris.windrose_frequencies = dirPercent  # cw from north using direction from (standard windrose style)
-    myFloris.wind_speed = 8.0  # m/s
+
+
+
     myFloris.air_density = 1.1716  # kg/m^3
     # myFloris.wind_direction = 30.  # deg ccw from east using direction too
-    myFloris.verbose = True
+    myFloris.verbose = False
 
 
     # final input directions should be in the order corresponding to the frequencies provided and use

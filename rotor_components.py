@@ -150,3 +150,4 @@ class CPCT_Interpolate(Component):
         # normalize on incoming wind speed to correct coefficients for yaw
         self.CP = self.CP * np.cos(self.yaw*np.pi/180.0)**self.pP
         self.CT = self.CT * np.cos(self.yaw*np.pi/180.0)**2
+        print 'in CPCT interp, wind_speed_hub = ', self.wind_speed_hub

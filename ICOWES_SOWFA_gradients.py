@@ -36,14 +36,13 @@ generator_efficiency = 0.944
 
 myFloris.parameters.CPcorrected = False
 myFloris.parameters.CTcorrected = False
-myFloris.parameters.FLORISoriginal = True
+myFloris.parameters.FLORISoriginal = False
 
 # Define turbine characteristics
 myFloris.axialInduction = np.array([axialInduction, axialInduction])
 myFloris.rotorDiameter = np.array([rotorDiameter, rotorDiameter])
 myFloris.rotorArea = np.array([rotorArea, rotorArea])
-myFloris.Ct = np.array([CT, CT])
-myFloris.Cp = np.array([CP, CP])
+
 myFloris.generator_efficiency = np.array([generator_efficiency, generator_efficiency])
 
 # Define site measurements
@@ -52,8 +51,8 @@ myFloris.windrose_directions = np.array([30.])
 myFloris.air_density = 1.1716
 
 if use_rotor_components:
-    myFloris.wind_speed = 8.0
-    myFloris.initVelocitiesTurbines = np.ones(2)*8.1
+    myFloris.wind_speed = 8.1
+    myFloris.initVelocitiesTurbines = np.ones(2)*myFloris.wind_speed
     myFloris.curve_CP = NREL5MWCPCT.CP
     myFloris.curve_CT = NREL5MWCPCT.CT
     myFloris.curve_wind_speed = NREL5MWCPCT.wind_speed
@@ -61,6 +60,9 @@ if use_rotor_components:
     myFloris.parameters.kd = 0.17
     myFloris.parameters.aU = 12.0
     myFloris.parameters.bU = 1.3
+else:
+    myFloris.Ct = np.array([CT, CT])
+    myFloris.Cp = np.array([CP, CP])
 
     # for i in range(nDirections):
     #     exec('myFloris.rotor_CPCT_%d.wind_speed_hub = np.ones(nTurbs)*myFloris.wind_speed' % i)

@@ -57,20 +57,9 @@ if use_rotor_components:
     myFloris.curve_CP = NREL5MWCPCT.CP
     myFloris.curve_CT = NREL5MWCPCT.CT
     myFloris.curve_wind_speed = NREL5MWCPCT.wind_speed
-    myFloris.parameters.ke = 0.05
-    myFloris.parameters.kd = 0.17
-    myFloris.parameters.aU = 12.0
-    myFloris.parameters.bU = 1.3
-    myFloris.parameters.initialWakeAngle = 3.0
-    myFloris.parameters.useaUbU = True
-    myFloris.parameters.useWakeAngle = True
-    myFloris.parameters.adjustInitialWakeDiamToYaw = False
 else:
     myFloris.Ct = np.array([CT, CT])
     myFloris.Cp = np.array([CP, CP])
-
-    # for i in range(nDirections):
-    #     exec('myFloris.rotor_CPCT_%d.wind_speed_hub = np.ones(nTurbs)*myFloris.wind_speed' % i)
 
 FLORISpower = list()
 FLORISgradient = list()

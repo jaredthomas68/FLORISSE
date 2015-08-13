@@ -132,10 +132,8 @@ if __name__ == "__main__":
         myFloris.parameters.bU = 1.3
         myFloris.parameters.initialWakeAngle = 3.0
         myFloris.parameters.useaUbU = True
-        myFloris.useInitialWakeAngle = True
-        myFloris.parameters.useaUbU = True
-        myFloris.useInitialWakeAngle = True
-        myFloris.adjustInitialWakeDiameterToYaw = True
+        myFloris.parameters.useWakeAngle = True
+        myFloris.parameters.adjustInitialWakeDiamToYaw = False
 
     else:
         myFloris.Ct = Ct

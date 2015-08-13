@@ -13,8 +13,8 @@ import cPickle as pickle
 if __name__ == "__main__":
 
     rotor_diameter = 126.4
-    nRows = 2.
-    spacing = 4.
+    nRows = 3.
+    spacing = 5.
 
     optimize_position = True
     optimize_yaw = True
@@ -38,8 +38,9 @@ if __name__ == "__main__":
     #            0.0118422107345036,0.011560253336063,0.0112914102352243,0.0110347872753329,0.0107895697803255,0.0105550139155358])
 
     # simple small windrose for testing
-    dirPercent = np.array([.01, 0.01, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1, 0.1, 0.09, 0.05, 0.04])
+    # dirPercent = np.array([.01, 0.01, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1, 0.1, 0.09, 0.05, 0.04])
     # dirPercent = np.array([0.1, 0.8, 0.1, 0.1])
+    dirPercent = np.array([0.4, 0.3, 0.3])
 
     # single direction
     # dirPercent = np.array([1.0])

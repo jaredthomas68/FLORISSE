@@ -14,7 +14,7 @@ class FLORISParameters(VariableTree):
     kd = Float(0.15, iotype='in')
     me = Array(np.array([-0.5, 0.22, 1.0]), iotype='in')
     # MU = Array(np.array([0.5, 1.0, 5.5]), iotype='in')
-    initialWakeDisplacement = Float(0, iotype='in')
+    initialWakeDisplacement = Float(-4.5, iotype='in')
     initialWakeAngle = Float(3.0, iotype='in')
 
 

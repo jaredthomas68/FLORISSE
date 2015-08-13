@@ -47,7 +47,7 @@ myFloris.generator_efficiency = np.array([generator_efficiency, generator_effici
 
 # Define site measurements
 myFloris.windrose_directions = np.array([30.])
-myFloris.wind_speed = 8.0    # m/s
+myFloris.wind_speed = 8.1    # m/s
 myFloris.windrose_speeds = np.ones_like(myFloris.windrose_directions)*myFloris.wind_speed
 myFloris.air_density = 1.1716
 
@@ -63,8 +63,8 @@ if use_rotor_components:
     myFloris.parameters.bU = 1.3
     myFloris.parameters.initialWakeAngle = 3.0
     myFloris.parameters.useaUbU = True
-    myFloris.useInitialWakeAngle = True
-    myFloris.adjustInitialWakeDiameterToYaw = True
+    myFloris.parameters.useWakeAngle = True
+    myFloris.parameters.adjustInitialWakeDiamToYaw = False
 else:
     myFloris.Ct = np.array([CT, CT])
     myFloris.Cp = np.array([CP, CP])

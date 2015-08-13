@@ -34,8 +34,8 @@ CP = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2)
 CT = 4.0*axialInduction*(1.0-axialInduction)
 generator_efficiency = 0.944
 
-myFloris.parameters.CPcorrected = False
-myFloris.parameters.CTcorrected = False
+myFloris.parameters.CPcorrected = True
+myFloris.parameters.CTcorrected = True
 myFloris.parameters.FLORISoriginal = False
 
 # Define turbine characteristics
@@ -47,13 +47,13 @@ myFloris.generator_efficiency = np.array([generator_efficiency, generator_effici
 
 # Define site measurements
 myFloris.windrose_directions = np.array([30.])
-wind_speed = 8.1    # m/s
-myFloris.windrose_speeds = np.ones_like(myFloris.windrose_directions)*wind_speed
+myFloris.wind_speed = 8.0    # m/s
+myFloris.windrose_speeds = np.ones_like(myFloris.windrose_directions)*myFloris.wind_speed
 myFloris.air_density = 1.1716
 
 if use_rotor_components:
     myFloris.wind_speed = 8.1
-    myFloris.initVelocitiesTurbines = np.ones(2)*myFloris.wind_speed
+    myFloris.initVelocitiesTurbines = np.ones_like(myFloris.windrose_directions)*myFloris.wind_speed
     myFloris.curve_CP = NREL5MWCPCT.CP
     myFloris.curve_CT = NREL5MWCPCT.CT
     myFloris.curve_wind_speed = NREL5MWCPCT.wind_speed
@@ -64,6 +64,7 @@ if use_rotor_components:
     myFloris.parameters.initialWakeAngle = 3.0
     myFloris.parameters.useaUbU = True
     myFloris.useInitialWakeAngle = True
+    myFloris.adjustInitialWakeDiameterToYaw = True
 else:
     myFloris.Ct = np.array([CT, CT])
     myFloris.Cp = np.array([CP, CP])

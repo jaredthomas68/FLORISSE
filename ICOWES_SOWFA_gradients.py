@@ -46,8 +46,9 @@ myFloris.rotorArea = np.array([rotorArea, rotorArea])
 myFloris.generator_efficiency = np.array([generator_efficiency, generator_efficiency])
 
 # Define site measurements
-myFloris.wind_speed = 8.0
 myFloris.windrose_directions = np.array([30.])
+wind_speed = 8.1    # m/s
+myFloris.windrose_speeds = np.ones_like(myFloris.windrose_directions)*wind_speed
 myFloris.air_density = 1.1716
 
 if use_rotor_components:

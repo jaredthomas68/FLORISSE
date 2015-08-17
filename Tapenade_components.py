@@ -452,7 +452,7 @@ class floris_power(Component):
             adjustInitialWakeDiamToYaw = self.parameters.adjustInitialWakeDiamToYaw
 
             pP = self.parameters.pP
-        print 'in floris_power aU = %s, bU = %s, useaUbU = %s, ke = %s, kd = %s' % (aU, bU, useaUbU, ke, kd)
+        # print 'in floris_power aU = %s, bU = %s, useaUbU = %s, ke = %s, kd = %s' % (aU, bU, useaUbU, ke, kd)
         baselineCT = self.parameters.baselineCT
         baselineTI = self.parameters.baselineTI
         keSaturation = self.parameters.keSaturation

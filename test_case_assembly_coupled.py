@@ -16,8 +16,8 @@ import numpy as np
 # ###########    imports for smooth model with analytic gradients    ##################################################
 from Analytic_components import floris_adjustCtCp
 from Analytic_components import floris_windframe
-from Analytic_components import AEP
-from Analytic_components import dist_const
+from Analytic_components import floris_AEP
+from Analytic_components import floris_dist_const
 
 # ###########    imports for smooth model with Tapenade provided gradients    #########################################
 from Tapenade_components import floris_wcent_wdiam
@@ -74,7 +74,9 @@ class floris_assembly_opt_AEP(Assembly):
             self.add('curve_CP', Array(np.zeros(datasize), iotype='in', desc='pre-calculated CPCT'))
             self.add('curve_CT', Array(np.zeros(datasize), iotype='in', desc='pre-calculated CPCT'))
             self.add('curve_wind_speed', Array(np.zeros(datasize), iotype='in', desc='pre-calculated CPCT'))
-            self.add('initVelocitiesTurbines', Array(np.zeros(nTurbines), iotype='in', units='m/s'))
+            # self.add('initVelocitiesTurbines', Array(np.zeros(nTurbines), iotype='in', units='m/s'))
+            # for i in range(0, nDirections):
+            #     self.add('initVelocitiesTurbines_%d' % i, Array(np.zeros(nTurbines), iotype='in', dtype='float', units='m/s'))
             # print 'in assembly', self.windSpeedToCPCT.CP.size, self.windSpeedToCPCT.CT.size, self.windSpeedToCPCT.wind_speed.size
         else:
             self.add('Ct', Array(np.zeros(nTurbines), iotype='in', desc='Thrust coefficient for all turbines'))
@@ -150,14 +152,14 @@ class floris_assembly_opt_AEP(Assembly):
             # self.driver.pyopt_diff = True
 
         # add AEP component first so it can be connected to
-        F6 = self.add('floris_AEP', AEP(nDirections=nDirections))
+        F6 = self.add('floris_AEP', floris_AEP(nDirections=nDirections))
         F6.missing_deriv_policy = 'assume_zero'
         self.connect('windrose_frequencies', 'floris_AEP.windrose_frequencies')
         self.connect('floris_AEP.AEP', 'AEP')
         self.connect('floris_AEP.power_directions_out', 'power_directions')
 
         # set up constraints
-        self.add('floris_dist_const', dist_const(nTurbines=nTurbines))
+        self.add('floris_dist_const', floris_dist_const(nTurbines=nTurbines))
         self.connect('turbineX', 'floris_dist_const.turbineX')
         self.connect('turbineY', 'floris_dist_const.turbineY')
 
@@ -187,6 +189,7 @@ class floris_assembly_opt_AEP(Assembly):
             # connect inputs to components
             if use_rotor_components:
                 # self.connect('initVelocitiesTurbines', ['rotor_CPCT_%d.wind_speed_hub' % i])
+                # self.connect('initVelocitiesTurbines_%d' % i, 'rotor_CPCT_%d.wind_speed_hub' % i)
                 self.connect('curve_CP', 'rotor_CPCT_%d.windSpeedToCPCT.CP' % i)
                 self.connect('curve_CT', 'rotor_CPCT_%d.windSpeedToCPCT.CT' % i)
                 self.connect('curve_wind_speed', 'rotor_CPCT_%d.windSpeedToCPCT.wind_speed' % i)

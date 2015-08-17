@@ -16,13 +16,53 @@ if __name__ == "__main__":
     nRows = 3.
     spacing = 5.
 
-    optimize_position = True
-    optimize_yaw = True
+    optimize_position = False
+    optimize_yaw = False
     use_rotor_components = True
     print 'optimize_position = ', optimize_position
     print 'optimize_yaw = ', optimize_yaw
 
-    # windrose for test case from Pieter
+    # for loading amalia windrose
+    windrose_directions = np.arange(0, 360, 5)
+    windrose_speeds = np.array([6.53163342, 6.11908394, 6.13415514, 6.0614625,  6.21344602,
+                                5.87000793, 5.62161519, 5.96779107, 6.33589422, 6.4668016,
+                                7.9854581,  7.6894432,  7.5089221,  7.48638098, 7.65764618,
+                                6.82414044, 6.36728201, 5.95982999, 6.05942132, 6.1176321,
+                                5.50987893, 4.18461796, 4.82863115, 0.,         0.,         0.,
+                                5.94115843, 5.94914252, 5.59386528, 6.42332524, 7.67904937,
+                                7.89618066, 8.84560463, 8.51601497, 8.40826823, 7.89479475,
+                                7.86194762, 7.9242645,  8.56269962, 8.94563889, 9.82636368,
+                               10.11153102, 9.71402212, 9.95233636,  10.35446959, 9.67156182,
+                                9.62462527, 8.83545158, 8.18011771, 7.9372492,  7.68726143,
+                                7.88134508, 7.31394723, 7.01839896, 6.82858346, 7.06213432,
+                                7.01949894, 7.00575122, 7.78735165, 7.52836352, 7.21392201,
+                                7.4356621,  7.54099962, 7.61335262, 7.90293531, 7.16021596,
+                                7.19617087, 7.5593657,  7.03278586, 6.76105501, 6.48004694,
+                                6.94716392])
+    dirPercent = np.array([1.17812570e-02, 1.09958570e-02, 9.60626600e-03, 1.21236860e-02,
+                           1.04722450e-02, 1.00695140e-02, 9.68687400e-03, 1.00090550e-02,
+                           1.03715390e-02, 1.12172280e-02, 1.52249700e-02, 1.56279300e-02,
+                           1.57488780e-02, 1.70577560e-02, 1.93535770e-02, 1.41980570e-02,
+                           1.20632100e-02, 1.20229000e-02, 1.32111160e-02, 1.74605400e-02,
+                           1.72994400e-02, 1.43993790e-02, 7.87436000e-03, 0.00000000e+00,
+                           2.01390000e-05, 0.00000000e+00, 3.42360000e-04, 3.56458900e-03,
+                           7.18957000e-03, 8.80068000e-03, 1.13583200e-02, 1.41576700e-02,
+                           1.66951900e-02, 1.63125500e-02, 1.31709000e-02, 1.09153300e-02,
+                           9.48553000e-03, 1.01097900e-02, 1.18819700e-02, 1.26069900e-02,
+                           1.58895900e-02, 1.77021600e-02, 2.04208100e-02, 2.27972500e-02,
+                           2.95438600e-02, 3.02891700e-02, 2.69861000e-02, 2.21527500e-02,
+                           2.12465500e-02, 1.82861400e-02, 1.66147400e-02, 1.90111800e-02,
+                           1.90514500e-02, 1.63932050e-02, 1.76215200e-02, 1.65341460e-02,
+                           1.44597600e-02, 1.40370300e-02, 1.65745000e-02, 1.56278200e-02,
+                           1.53459200e-02, 1.75210100e-02, 1.59702700e-02, 1.51041500e-02,
+                           1.45201100e-02, 1.34527800e-02, 1.47819600e-02, 1.33923300e-02,
+                           1.10562900e-02, 1.04521380e-02, 1.16201970e-02, 1.10562700e-02])
+
+
+
+    print dirPercent.shape, windrose_speeds.shape, windrose_directions.shape
+
+    # windrose for DOE test case
     # dirPercent = np.array([ 0.0103304391513755,0.0101152216690551,0.0099087885737683,0.00971061280229294,
     #            0.00952020862969896,0.00933712769451244,0.00916095547386126,0.00899130815027124,0.00882782982026631,
     #            0.00867019000204726,0.00882782982026631,0.00899130815027124,0.00916095547386126,0.00933712769451244,
@@ -40,7 +80,7 @@ if __name__ == "__main__":
     # simple small windrose for testing
     # dirPercent = np.array([.01, 0.01, 0.1, 0.1, 0.1, 0.1, 0.4, 0.1, 0.1, 0.09, 0.05, 0.04])
     # dirPercent = np.array([0.1, 0.8, 0.1, 0.1])
-    dirPercent = np.array([0.4, 0.3, 0.3])
+    # dirPercent = np.array([0.4, 0.3, 0.3])
 
     # single direction
     # dirPercent = np.array([1.0])
@@ -54,11 +94,11 @@ if __name__ == "__main__":
     turbineY = np.ndarray.flatten(ypoints)
 
     # set up speed array
-    if use_rotor_components:
-        wind_speed = 8.1    # m/s
-    else:
-        wind_speed = 8.0    # m/s
-    windrose_speeds = np.ones_like(dirPercent)*wind_speed
+    # if use_rotor_components:
+    #     wind_speed = 8.1    # m/s
+    # else:
+    #     wind_speed = 8.0    # m/s
+    # windrose_speeds = np.ones_like(dirPercent)*wind_speed
 
     # to make pics for Dr. Ning
     # turbineX = np.arange(start=spacing*rotor_diameter, stop=nRows*spacing*rotor_diameter+1, step=spacing*rotor_diameter)
@@ -102,7 +142,7 @@ if __name__ == "__main__":
         Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2.)
         generator_efficiency[turbI] = 0.944
         # yaw[turbI] = 25.
-        yaw[turbI] = 5.
+        yaw[turbI] = 0.
 
     # myFloris = floris_assembly_opt(nTurbines=nTurbs, resolution=0)
     myFloris = floris_assembly_opt_AEP(nTurbines=nTurbs, nDirections=nDirections,
@@ -120,8 +160,9 @@ if __name__ == "__main__":
     # myFloris.wind_speed = wind_speed  # m/s
 
     if use_rotor_components:
-
-        myFloris.initVelocitiesTurbines = np.ones_like(turbineX)*wind_speed
+        # for i in range(0, nDirections):
+        #     exec('myFloris.initVelocitiesTurbines_%d = np.ones_like(turbineX)*windrose_speeds[%d]' % (i, i))
+        # myFloris.initVelocitiesTurbines = np.ones_like(turbineX)*windrose_speeds
         # myFloris.windSpeedToCPCT = NREL5MWCPCT
         myFloris.curve_CP = NREL5MWCPCT.CP
         myFloris.curve_CT = NREL5MWCPCT.CT
@@ -159,7 +200,8 @@ if __name__ == "__main__":
 
     # final input directions should be in the order corresponding to the frequencies provided and use
     # 0 deg = E progressing ccw
-    myFloris.windrose_directions = 270. - np.arange(0.0, 360.0, 360.0/nDirections)
+    myFloris.windrose_directions = 270. - windrose_directions
+    # myFloris.windrose_directions = 270. - np.arange(0.0, 360.0, 360.0/nDirections)
     # myFloris.windrose_directions = np.array([30.0])
     # myFloris.windrose_directions = 270 - windDirs
     # print myFloris.windrose_directions
@@ -167,8 +209,8 @@ if __name__ == "__main__":
         if myFloris.windrose_directions[i] < 0.:
             myFloris.windrose_directions[i] += 360.
 
-    myFloris.parameters.CPcorrected = False
-    myFloris.parameters.CTcorrected = False
+    myFloris.parameters.CPcorrected = True
+    myFloris.parameters.CTcorrected = True
     myFloris.parameters.axialIndProvided = False
     myFloris.parameters.FLORISoriginal = False
 
@@ -189,6 +231,9 @@ if __name__ == "__main__":
     print('FLORIS Opt. calculation took %.03f sec.' % (toc-tic))
 
     # Display returns
+    filename = 'test_case_3x3_ave_speeds_powerout.txt'
+    np.savetxt(filename, myFloris.power_directions, delimiter='\t')
+
 
     # TODO get this for loop to work so you can print the desired values, or figure out another way to do this
     # for i in range(0, nDirections):
@@ -203,15 +248,17 @@ if __name__ == "__main__":
     #                                                         myFloris.floris_power_[i].wt_power)
 
     print 'power in each wind direction (kW): %s' % myFloris.power_directions
-    print 'power of each turbine (kW): %s' % myFloris.floris_power_0.wt_power
+
     print 'turbine X positions in wind frame (m): %s' % myFloris.turbineX
     print 'turbine Y positions in wind frame (m): %s' % myFloris.turbineY
     if optimize_yaw:
         for direction in range(0, nDirections):
             print 'yaw for wind direction %d deg. (deg.):' % myFloris.windrose_directions[direction]
             exec('print myFloris.yaw_%d' % direction)
+            # exec("print 'power of each turbine for wind direction %d deg. (kW): %s' % myFloris.floris_power_%d.wt_power" % (myFloris.windrose_directions[direction], direction))
     else:
         print 'yaw (deg) = ', myFloris.yaw
+        print 'power of each turbine (kW): %s' % myFloris.floris_power_0.wt_power
     print 'AEP (kWh): %s' % myFloris.AEP
 
     resolution = 200

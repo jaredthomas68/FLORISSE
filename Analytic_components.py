@@ -350,13 +350,13 @@ class floris_windframe(Component):
         return J
 
 
-class AEP(Component):
+class floris_AEP(Component):
 
     AEP = Float(iotype='out', units='kW', desc='total annual energy output of wind farm')
 
     def __init__(self, nDirections):
 
-        super(AEP, self).__init__()
+        super(floris_AEP, self).__init__()
 
         self.add('power_directions', Array(np.zeros(nDirections), iotype='in', units='kW', desc='vector containing \
                                            the power production at each wind direction ccw from north'))
@@ -382,6 +382,7 @@ class AEP(Component):
         # promote AEP result to class attribute
         self.AEP = AEP
         self.power_directions_out = power_directions
+        print 'in AEP, AEP = %s' % AEP
 
     def list_deriv_vars(self):
 
@@ -405,7 +406,7 @@ class AEP(Component):
         return J
 
 
-class dist_const(Component):
+class floris_dist_const(Component):
 
     parameters = VarTree(FLORISParameters(), iotype='in')
 
@@ -413,17 +414,18 @@ class dist_const(Component):
 
         # print 'entering wcent_wdiam __init__ - Tapenade'
 
-        super(dist_const, self).__init__()
+        super(floris_dist_const, self).__init__()
+
+
 
         # Explicitly size input arrays
         self.add('turbineX', Array(np.zeros(nTurbines), iotype='in', \
                                     desc='x coordinates of turbines in wind dir. ref. frame'))
         self.add('turbineY', Array(np.zeros(nTurbines), iotype='in', \
                                     desc='y coordinates of turbines in wind dir. ref. frame'))
-
-        # Explicitly size output array
-        self.add('separation', Array(np.zeros((nTurbines-1.)*nTurbines/2.), iotype='out', dtype='float', \
-                                        desc='spacing of all turbines in the wind farm'))
+         # Explicitly size output array
+        self.add('separation', Array(np.zeros((nTurbines-1.)*nTurbines/2.), iotype='out', \
+                                     desc='spacing of all turbines in the wind farm'))
 
     def execute(self):
 
@@ -438,6 +440,7 @@ class dist_const(Component):
                 separation[k] = np.sqrt((turbineX[j]-turbineX[i])**2+(turbineY[j]-turbineY[i])**2)
                 k += 1
         self.separation = separation
+        # print 'sep = ', separation
 
     # def list_deriv_vars(self):
     #     return ('turbineXw', 'turbineYw'), ('separation',)

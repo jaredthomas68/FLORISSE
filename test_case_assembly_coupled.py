@@ -308,7 +308,7 @@ class floris_assembly_opt_AEP(Assembly):
         if optimize_position or optimize_yaw:
             # set up driver
             self.driver.iprint = 3
-            self.driver.accuracy = 1.0e-12
+            self.driver.accuracy = 1.0e-6
             self.driver.maxiter = 100
             self.driver.add_objective('-floris_AEP.AEP')
             if optimize_position:

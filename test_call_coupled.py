@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     optimize_position = False
     optimize_yaw = True
-    optimize_yaw_decoupled = True
+    optimize_yaw_decoupled = False
     use_rotor_components = True
     print '10 deg. initial yaw'
     print 'optimize_position = ', optimize_position
@@ -81,7 +81,9 @@ if __name__ == "__main__":
         # dirPercent = np.array([0.4, 0.3, 0.3])
 
         # single direction
-        # dirPercent = np.array([1.0])
+        dirPercent = np.array([1.0])
+        nDirections = len(dirPercent)
+        windrose_speeds_dir_ave = np.array([8.0])
 
 
         # Set up position arrays

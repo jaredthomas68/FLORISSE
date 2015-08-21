@@ -1,43 +1,163 @@
 from utilities import check_gradient
 from Tapenade_components import floris_wcent_wdiam, floris_overlap, floris_power
 from Analytic_components import floris_adjustCtCp, floris_windframe, floris_AEP
+from rotor_components import CPCT_Interpolate_Gradients
 from Parameters import FLORISParameters
 import numpy as np
+import cPickle as pickle
 
 
-def test_power():
+def test_CPCT_Interpolate_Gradients():
+
+    # turbineY = np.array([2024.7, 2335.3, 1387.2, 1697.8, 2060.3, 1749.7])
+
+    nTurbs = 6
+    NREL5MWCPCT = pickle.load(open('NREL5MWCPCT.p'))
+    datasize = NREL5MWCPCT.CP.size
+    axialInduction = np.zeros(nTurbs)+1.0/3.0
+    Ct = np.zeros(nTurbs)
+    Cp = np.zeros(nTurbs)
+    yaw = np.zeros(nTurbs)
+
+    comp = CPCT_Interpolate_Gradients(nTurbines=nTurbs, datasize=datasize)
+
+    comp.parameters = FLORISParameters()
+
+    for turbI in range(0, nTurbs):
+
+        Ct[turbI] = 4.0*axialInduction[turbI]*(1.0-axialInduction[turbI])
+        Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2)
+        # yaw[turbI] = 25.0
+        yaw[turbI] = 20.
+    # print 'Ct, Cp = ', Ct, Cp
+    comp.Ct_in = Ct
+    comp.Cp_in = Cp
+    comp.yaw = yaw
+    comp.windSpeedToCPCT.CP = NREL5MWCPCT.CP
+    comp.windSpeedToCPCT.CT = NREL5MWCPCT.CT
+    comp.windSpeedToCPCT.wind_speed = NREL5MWCPCT.wind_speed
+    comp.parameters.ke = 0.05
+    comp.parameters.kd = 0.17
+    comp.parameters.aU = 12.0
+    comp.parameters.bU = 1.3
+    comp.parameters.initialWakeAngle = 3.0
+    comp.parameters.useaUbU = True
+    comp.parameters.useWakeAngle = True
+    comp.parameters.adjustInitialWakeDiamToYaw = False
+
+    comp.parameters.CTcorrected = True
+    comp.parameters.CPcorrected = True
+
+    names, errors = check_gradient(comp, fd='central', step_size=1e-8, tol=1e-6, display=True,
+        show_missing_warnings=True, show_scaling_warnings=True, min_grad=1e-6, max_grad=1e6)
+
+    print max(errors)
+
+
+def test_adjustCtCp():
+
+
+
+    # turbineY = np.array([2024.7, 2335.3, 1387.2, 1697.8, 2060.3, 1749.7])
+
+    nTurbs = 6
+    axialInduction = np.zeros(nTurbs)+1.0/3.0
+    Ct = np.zeros(nTurbs)
+    Cp = np.zeros(nTurbs)
+    yaw = np.zeros(nTurbs)
+
+    comp = floris_adjustCtCp(nTurbines=nTurbs)
+
+    comp.parameters = FLORISParameters()
+
+    for turbI in range(0, nTurbs):
+
+        Ct[turbI] = 4.0*axialInduction[turbI]*(1.0-axialInduction[turbI])
+        Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2)
+        # yaw[turbI] = 25.0
+        yaw[turbI] = 20.
+    print 'Ct, Cp = ', Ct, Cp
+    comp.Ct_in = Ct
+    comp.Cp_in = Cp
+    comp.yaw = yaw
+        # Define flow properties
+    # comp.parameters.CTcorrected = False
+    comp.parameters.CTcorrected = True
+    # comp.parameters.CPcorrected = False
+    comp.parameters.CPcorrected = True
+
+    names, errors = check_gradient(comp, fd='central', step_size=1e-8, tol=1e-6, display=True,
+        show_missing_warnings=True, show_scaling_warnings=True, min_grad=1e-6, max_grad=1e6)
+
+
+def test_windframe():
 
     turbineXw = np.array([1521.00978779, 1487.94926246, 2150.60113933, 2117.540614, 2747.13196554, 2780.19249087])
 
+    turbineYw =  np.array([305.06623126, 682.80372167, 360.15044013,  737.88793055, 792.97213942,  415.234649])
+
+    # turbineY = np.array([2024.7, 2335.3, 1387.2, 1697.8, 2060.3, 1749.7])
+
     nTurbs = len(turbineXw)
 
-    comp = floris_power(nTurbines=nTurbs)
+    comp = floris_windframe(nTurbines=nTurbs, resolution=0)
 
     comp.parameters = FLORISParameters()
 
     comp.turbineXw = turbineXw
+    comp.turbineYw = turbineYw
 
-    comp.wakeOverlapTRel = np.array([0.94882764, 0.,         0.,         0.,         0.,         0.,         0.005853,\
-                            0.,         0.,         0.,         0.,         0.,         0.00603356,\
-                            0.,         0.,         0.,         0.,         0.,         0.,\
-                            0.94882764, 0.,         0.,         0.,         0.,         0.,         0.005853,\
-                            0.,         0.,         0.,         0.,         0.,         0.00603356,\
-                            0.,         0.,         0.,         0.,         0.21889896, 0.,\
-                            0.94882764, 0.,         0.,         0.,         0.30408137, 0.,         0.005853,\
-                            0.,         0.,         0.,         0.35018179, 0.,         0.00603356,\
-                            0.,         0.,         0.,         0.,         0.21889896, 0.,\
-                            0.94882764, 0.,         0.,         0.,         0.30408137, 0.,         0.005853,\
-                            0.,         0.,         0.,         0.35018179, 0.,         0.00603356,\
-                            0.,         0.,         0.,         0.,         0.,         0.21889896,\
-                            0.94882764, 0.,         0.,         0.14035337, 0.,         0.30408137,\
-                            0.005853,   0.,         0.,         0.61612477, 0.,         0.35018179,\
-                            0.00603356, 0.,         0.,         0.,         0.21889896, 0.,         0.,\
-                            0.94882764, 0.14035337, 0.,         0.30408137, 0.,         0.,         0.005853,\
-                            0.61612477, 0.,         0.35018179, 0.,         0.,         0.00603356])
+    rotorDiameter = np.zeros(nTurbs)
+    axialInduction = np.zeros(nTurbs)
+    Ct = np.zeros(nTurbs)
+    Cp = np.zeros(nTurbs)
+    generator_efficiency = np.zeros(nTurbs)
+    yaw = np.zeros(nTurbs)
+
+    for turbI in range(0, nTurbs):
+
+        rotorDiameter[turbI] = 126.4
+        axialInduction[turbI] = 1.0/3.0
+        Ct[turbI] = 4.0*axialInduction[turbI]*(1.0-axialInduction[turbI])
+        Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2)
+        generator_efficiency[turbI] = 0.944
+        # yaw[turbI] = 25.0
+        yaw[turbI] = 0
+
+    comp.rotorDiameter = rotorDiameter
+    comp.axialInduction = axialInduction
+    comp.Ct = Ct
+    comp.Cp = Cp
+    comp.generator_efficiency = generator_efficiency
+    comp.yaw = yaw
+        # Define flow properties
+    comp.wind_speed = 8.0  # m/s
+    comp.air_density = 1.1716  # kg/m^3
+    comp.wind_direction = 30  # deg
+    comp.verbose = False
+
+    names, errors = check_gradient(comp, fd='central', step_size=1e-6, tol=1e-4, display=True,
+        show_missing_warnings=True, show_scaling_warnings=True, min_grad=1e-6, max_grad=1e6)
+
+
+def test_wcent_wdiam():
+
+    turbineXw = np.array([1521.00978779, 1487.94926246, 2150.60113933, 2117.540614, 2747.13196554, 2780.19249087])
+
+    turbineYw = np.array([305.06623126, 682.80372167, 360.15044013,  737.88793055, 792.97213942,  415.234649])
+
+    nTurbs = turbineXw.size
+
+    comp = floris_wcent_wdiam(nTurbines=nTurbs)
+
+    comp.parameters = FLORISParameters()
+
+    comp.turbineXw = turbineXw
+    comp.turbineYw = turbineYw
 
     # turbineY = np.array([2024.7, 2335.3, 1387.2, 1697.8, 2060.3, 1749.7])
 
-    nTurbs = comp.turbineXw.size
+
     rotorDiameter = np.zeros(nTurbs)
     axialInduction = np.zeros(nTurbs)
     Ct = np.zeros(nTurbs)
@@ -66,10 +186,9 @@ def test_power():
     comp.air_density = 1.1716  # kg/m^3
     comp.wind_direction = 30.  # deg
     comp.verbose = False
-    comp.parameters.FLORISoriginal = True
 
-    names, errors = check_gradient(comp, fd='central', step_size=1e-6, tol=1e-6, display=True,
-        show_missing_warnings=True, show_scaling_warnings=False, min_grad=1e-6, max_grad=1e6)
+    names, errors = check_gradient(comp, fd='central', step_size=1e-6, tol=1e-4, display=True,
+        show_missing_warnings=True, show_scaling_warnings=True, min_grad=1e-6, max_grad=1e6)
 
 
 def test_overlap():
@@ -153,24 +272,39 @@ def test_overlap():
         show_missing_warnings=True, show_scaling_warnings=False, min_grad=1e-6, max_grad=1e6)
 
 
-def test_wcent_wdiam():
+def test_power():
 
     turbineXw = np.array([1521.00978779, 1487.94926246, 2150.60113933, 2117.540614, 2747.13196554, 2780.19249087])
 
-    turbineYw = np.array([305.06623126, 682.80372167, 360.15044013,  737.88793055, 792.97213942,  415.234649])
+    nTurbs = len(turbineXw)
 
-    nTurbs = turbineXw.size
-
-    comp = floris_wcent_wdiam(nTurbines=nTurbs)
+    comp = floris_power(nTurbines=nTurbs)
 
     comp.parameters = FLORISParameters()
 
     comp.turbineXw = turbineXw
-    comp.turbineYw = turbineYw
+
+    comp.wakeOverlapTRel = np.array([0.94882764, 0.,         0.,         0.,         0.,         0.,         0.005853,\
+                            0.,         0.,         0.,         0.,         0.,         0.00603356,\
+                            0.,         0.,         0.,         0.,         0.,         0.,\
+                            0.94882764, 0.,         0.,         0.,         0.,         0.,         0.005853,\
+                            0.,         0.,         0.,         0.,         0.,         0.00603356,\
+                            0.,         0.,         0.,         0.,         0.21889896, 0.,\
+                            0.94882764, 0.,         0.,         0.,         0.30408137, 0.,         0.005853,\
+                            0.,         0.,         0.,         0.35018179, 0.,         0.00603356,\
+                            0.,         0.,         0.,         0.,         0.21889896, 0.,\
+                            0.94882764, 0.,         0.,         0.,         0.30408137, 0.,         0.005853,\
+                            0.,         0.,         0.,         0.35018179, 0.,         0.00603356,\
+                            0.,         0.,         0.,         0.,         0.,         0.21889896,\
+                            0.94882764, 0.,         0.,         0.14035337, 0.,         0.30408137,\
+                            0.005853,   0.,         0.,         0.61612477, 0.,         0.35018179,\
+                            0.00603356, 0.,         0.,         0.,         0.21889896, 0.,         0.,\
+                            0.94882764, 0.14035337, 0.,         0.30408137, 0.,         0.,         0.005853,\
+                            0.61612477, 0.,         0.35018179, 0.,         0.,         0.00603356])
 
     # turbineY = np.array([2024.7, 2335.3, 1387.2, 1697.8, 2060.3, 1749.7])
 
-
+    nTurbs = comp.turbineXw.size
     rotorDiameter = np.zeros(nTurbs)
     axialInduction = np.zeros(nTurbs)
     Ct = np.zeros(nTurbs)
@@ -199,95 +333,10 @@ def test_wcent_wdiam():
     comp.air_density = 1.1716  # kg/m^3
     comp.wind_direction = 30.  # deg
     comp.verbose = False
+    comp.parameters.FLORISoriginal = True
 
-    names, errors = check_gradient(comp, fd='central', step_size=1e-6, tol=1e-4, display=True,
-        show_missing_warnings=True, show_scaling_warnings=True, min_grad=1e-6, max_grad=1e6)
-
-
-def test_windframe():
-
-    turbineXw = np.array([1521.00978779, 1487.94926246, 2150.60113933, 2117.540614, 2747.13196554, 2780.19249087])
-
-    turbineYw =  np.array([305.06623126, 682.80372167, 360.15044013,  737.88793055, 792.97213942,  415.234649])
-
-    # turbineY = np.array([2024.7, 2335.3, 1387.2, 1697.8, 2060.3, 1749.7])
-
-    nTurbs = len(turbineXw)
-
-    comp = floris_windframe(nTurbines=nTurbs, resolution=0)
-
-    comp.parameters = FLORISParameters()
-
-    comp.turbineXw = turbineXw
-    comp.turbineYw = turbineYw
-
-    rotorDiameter = np.zeros(nTurbs)
-    axialInduction = np.zeros(nTurbs)
-    Ct = np.zeros(nTurbs)
-    Cp = np.zeros(nTurbs)
-    generator_efficiency = np.zeros(nTurbs)
-    yaw = np.zeros(nTurbs)
-
-    for turbI in range(0, nTurbs):
-
-        rotorDiameter[turbI] = 126.4
-        axialInduction[turbI] = 1.0/3.0
-        Ct[turbI] = 4.0*axialInduction[turbI]*(1.0-axialInduction[turbI])
-        Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2)
-        generator_efficiency[turbI] = 0.944
-        # yaw[turbI] = 25.0
-        yaw[turbI] = 0
-
-    comp.rotorDiameter = rotorDiameter
-    comp.axialInduction = axialInduction
-    comp.Ct = Ct
-    comp.Cp = Cp
-    comp.generator_efficiency = generator_efficiency
-    comp.yaw = yaw
-        # Define flow properties
-    comp.wind_speed = 8.0  # m/s
-    comp.air_density = 1.1716  # kg/m^3
-    comp.wind_direction = 30  # deg
-    comp.verbose = False
-
-    names, errors = check_gradient(comp, fd='central', step_size=1e-6, tol=1e-4, display=True,
-        show_missing_warnings=True, show_scaling_warnings=True, min_grad=1e-6, max_grad=1e6)
-
-
-def test_adjustCtCp():
-
-
-
-    # turbineY = np.array([2024.7, 2335.3, 1387.2, 1697.8, 2060.3, 1749.7])
-
-    nTurbs = 6
-    axialInduction = np.zeros(nTurbs)+1.0/3.0
-    Ct = np.zeros(nTurbs)
-    Cp = np.zeros(nTurbs)
-    yaw = np.zeros(nTurbs)
-
-    comp = floris_adjustCtCp(nTurbines=nTurbs)
-
-    comp.parameters = FLORISParameters()
-
-    for turbI in range(0, nTurbs):
-
-        Ct[turbI] = 4.0*axialInduction[turbI]*(1.0-axialInduction[turbI])
-        Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2)
-        # yaw[turbI] = 25.0
-        yaw[turbI] = 20.
-    print 'Ct, Cp = ', Ct, Cp
-    comp.Ct_in = Ct
-    comp.Cp_in = Cp
-    comp.yaw = yaw
-        # Define flow properties
-    # comp.parameters.CTcorrected = False
-    comp.parameters.CTcorrected = True
-    # comp.parameters.CPcorrected = False
-    comp.parameters.CPcorrected = True
-
-    names, errors = check_gradient(comp, fd='central', step_size=1e-8, tol=1e-6, display=True,
-        show_missing_warnings=True, show_scaling_warnings=True, min_grad=1e-6, max_grad=1e6)
+    names, errors = check_gradient(comp, fd='central', step_size=1e-6, tol=1e-6, display=True,
+        show_missing_warnings=True, show_scaling_warnings=False, min_grad=1e-6, max_grad=1e6)
 
 
 def test_AEP():
@@ -314,7 +363,8 @@ def test_AEP():
 
 if __name__ == '__main__':
 
-    test_adjustCtCp()
+    test_CPCT_Interpolate_Gradients()
+    # test_adjustCtCp()
     # test_windframe()
     # test_wcent_wdiam()
     # test_overlap()

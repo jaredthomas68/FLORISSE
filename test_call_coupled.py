@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     rotor_diameter = 126.4
     nRows = 3.
-    spacing = 5.
+    spacing = 7.
 
     optimize_position = False
     optimize_yaw = True

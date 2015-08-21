@@ -2,6 +2,7 @@ from openmdao.main.api import Assembly
 from openmdao.lib.datatypes.api import Array, Bool, Float, VarTree
 from openmdao.lib.drivers.api import FixedPointIterator, SLSQPdriver, COBYLAdriver
 from pyopt_driver.pyopt_driver import pyOptDriver
+from pyoptsparse_driver.pyoptsparse_driver import pyOptSparseDriver
 from openmdao.lib.casehandlers.listcase import ListCaseIterator
 from Parameters import FLORISParameters
 
@@ -147,7 +148,8 @@ class floris_assembly_opt_AEP(Assembly):
         if optimize_position or optimize_yaw:
             # self.add('driver', COBYLAdriver())
             # self.driver.gradient_options.force_fd = True
-            self.add('driver', pyOptDriver())
+            # self.add('driver', pyOptDriver())
+            self.add('driver', pyOptSparseDriver())
             self.driver.optimizer = 'SNOPT'
             # self.driver.pyopt_diff = True
 
@@ -173,7 +175,8 @@ class floris_assembly_opt_AEP(Assembly):
             if use_rotor_components:
                 # add fixed point iterator
                 self.add('FPIdriver_%d' % i, FixedPointIterator())
-                self.add('rotor_CPCT_%d' % i, CPCT_Interpolate(nTurbines=self.nTurbines, datasize=self.datasize))
+                # self.add('rotor_CPCT_%d' % i, CPCT_Interpolate(nTurbines=self.nTurbines, datasize=self.datasize))
+                self.add('rotor_CPCT_%d' % i, CPCT_Interpolate_Gradients(nTurbines=self.nTurbines, datasize=self.datasize))
             else:
                 self.add('floris_adjustCtCp_%d' % i, floris_adjustCtCp(nTurbines=nTurbines))
 

@@ -28,7 +28,7 @@ def test_CPCT_Interpolate_Gradients():
         Ct[turbI] = 4.0*axialInduction[turbI]*(1.0-axialInduction[turbI])
         Cp[turbI] = 0.7737/0.944 * 4.0 * 1.0/3.0 * np.power((1 - 1.0/3.0), 2)
         # yaw[turbI] = 25.0
-        yaw[turbI] = 20.
+        yaw[turbI] = 15.
     # print 'Ct, Cp = ', Ct, Cp
     comp.Ct_in = Ct
     comp.Cp_in = Cp
@@ -36,6 +36,7 @@ def test_CPCT_Interpolate_Gradients():
     comp.windSpeedToCPCT.CP = NREL5MWCPCT.CP
     comp.windSpeedToCPCT.CT = NREL5MWCPCT.CT
     comp.windSpeedToCPCT.wind_speed = NREL5MWCPCT.wind_speed
+    comp.wind_speed_hub = np.ones(nTurbs)*20.
     comp.parameters.ke = 0.05
     comp.parameters.kd = 0.17
     comp.parameters.aU = 12.0
@@ -51,7 +52,7 @@ def test_CPCT_Interpolate_Gradients():
     names, errors = check_gradient(comp, fd='central', step_size=1e-8, tol=1e-6, display=True,
         show_missing_warnings=True, show_scaling_warnings=True, min_grad=1e-6, max_grad=1e6)
 
-    print max(errors)
+    print 'max error: ', max(errors)
 
 
 def test_adjustCtCp():

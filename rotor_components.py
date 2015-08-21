@@ -170,69 +170,180 @@ class CPCT_Interpolate_Gradients(Component):
         self.add('CT', Array(np.zeros(nTurbines), iotype='out'))
 
     def execute(self):
-        h = 1e-6
-        wind_speed_ax = np.cos(self.yaw*np.pi/180.0)**(self.pP/3.0)*self.wind_speed_hub
-        print 'wind_speed_ax = %s' % wind_speed_ax
-        wind_speed_ax_high_yaw = np.cos((self.yaw+h)*np.pi/180.0)**(self.pP/3.0)*self.wind_speed_hub
-        wind_speed_ax_low_yaw = np.cos((self.yaw-h)*np.pi/180.0)**(self.pP/3.0)*self.wind_speed_hub
-        wind_speed_ax_high_wind = np.cos((self.yaw)*np.pi/180.0)**(self.pP/3.0)*(self.wind_speed_hub+h)
-        wind_speed_ax_low_wind = np.cos((self.yaw)*np.pi/180.0)**(self.pP/3.0)*(self.wind_speed_hub-h)
 
+        wind_speed_ax = np.cos(self.yaw*np.pi/180.0)**(self.pP/3.0)*self.wind_speed_hub
         # use interpolation on precalculated CP-CT curve
         wind_speed_ax = np.maximum(wind_speed_ax, self.windSpeedToCPCT.wind_speed[0])
+        wind_speed_ax = np.minimum(wind_speed_ax, self.windSpeedToCPCT.wind_speed[-1])
+        self.CP = interp(wind_speed_ax, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
+        self.CT = interp(wind_speed_ax, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
+
+        # normalize on incoming wind speed to correct coefficients for yaw
+        self.CP = self.CP * np.cos(self.yaw*np.pi/180.0)**self.pP
+        self.CT = self.CT * np.cos(self.yaw*np.pi/180.0)**2
+        # print 'in CPCT interp, wind_speed_hub = ', self.wind_speed_hub
+
+    def list_deriv_vars(self):
+        return ('yaw', 'wind_speed_hub'), ('CP', 'CT')
+
+    def provideJ(self):     # standard central differencing
+        # set step size for finite differencing
+        h = 1e-6
+
+        # calculate upper and lower function values
+        wind_speed_ax_high_yaw = np.cos((self.yaw+h)*np.pi/180.0)**(self.pP/3.0)*self.wind_speed_hub
+        wind_speed_ax_low_yaw = np.cos((self.yaw-h)*np.pi/180.0)**(self.pP/3.0)*self.wind_speed_hub
+        wind_speed_ax_high_wind = np.cos(self.yaw*np.pi/180.0)**(self.pP/3.0)*(self.wind_speed_hub+h)
+        wind_speed_ax_low_wind = np.cos(self.yaw*np.pi/180.0)**(self.pP/3.0)*(self.wind_speed_hub-h)
+
+        # use interpolation on precalculated CP-CT curve
         wind_speed_ax_high_yaw = np.maximum(wind_speed_ax_high_yaw, self.windSpeedToCPCT.wind_speed[0])
         wind_speed_ax_low_yaw = np.maximum(wind_speed_ax_low_yaw, self.windSpeedToCPCT.wind_speed[0])
         wind_speed_ax_high_wind = np.maximum(wind_speed_ax_high_wind, self.windSpeedToCPCT.wind_speed[0])
         wind_speed_ax_low_wind = np.maximum(wind_speed_ax_low_wind, self.windSpeedToCPCT.wind_speed[0])
 
-        wind_speed_ax = np.minimum(wind_speed_ax, self.windSpeedToCPCT.wind_speed[-1])
         wind_speed_ax_high_yaw = np.minimum(wind_speed_ax_high_yaw, self.windSpeedToCPCT.wind_speed[-1])
         wind_speed_ax_low_yaw = np.minimum(wind_speed_ax_low_yaw, self.windSpeedToCPCT.wind_speed[-1])
         wind_speed_ax_high_wind = np.minimum(wind_speed_ax_high_wind, self.windSpeedToCPCT.wind_speed[-1])
         wind_speed_ax_low_wind = np.minimum(wind_speed_ax_low_wind, self.windSpeedToCPCT.wind_speed[-1])
 
-        self.CP = interp(wind_speed_ax, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
         CP_high_yaw = interp(wind_speed_ax_high_yaw, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
         CP_low_yaw = interp(wind_speed_ax_low_yaw, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
         CP_high_wind = interp(wind_speed_ax_high_wind, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
         CP_low_wind = interp(wind_speed_ax_low_wind, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
 
-        self.CT = interp(wind_speed_ax, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
         CT_high_yaw = interp(wind_speed_ax_high_yaw, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
         CT_low_yaw = interp(wind_speed_ax_low_yaw, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
         CT_high_wind = interp(wind_speed_ax_high_wind, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
         CT_low_wind = interp(wind_speed_ax_low_wind, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
 
         # normalize on incoming wind speed to correct coefficients for yaw
-        self.CP = self.CP * np.cos(self.yaw*np.pi/180.0)**self.pP
         CP_high_yaw = CP_high_yaw * np.cos((self.yaw+h)*np.pi/180.0)**self.pP
         CP_low_yaw = CP_low_yaw * np.cos((self.yaw-h)*np.pi/180.0)**self.pP
         CP_high_wind = CP_high_wind * np.cos((self.yaw)*np.pi/180.0)**self.pP
         CP_low_wind = CP_low_wind * np.cos((self.yaw)*np.pi/180.0)**self.pP
 
-        self.CT = self.CT * np.cos(self.yaw*np.pi/180.0)**2
         CT_high_yaw = CT_high_yaw * np.cos((self.yaw+h)*np.pi/180.0)**2
         CT_low_yaw = CT_low_yaw * np.cos((self.yaw-h)*np.pi/180.0)**2
         CT_high_wind = CT_high_wind * np.cos((self.yaw)*np.pi/180.0)**2
         CT_low_wind = CT_low_wind * np.cos((self.yaw)*np.pi/180.0)**2
 
+        # compute derivative via central differencing and arrange in sub-matrices of the Jacobian
         dCP_dyaw = np.eye(self.nTurbines)*(CP_high_yaw-CP_low_yaw)/(2.0*h)
         dCP_dwind = np.eye(self.nTurbines)*(CP_high_wind-CP_low_wind)/(2.0*h)
         dCT_dyaw = np.eye(self.nTurbines)*(CT_high_yaw-CT_low_yaw)/(2.0*h)
         dCT_dwind = np.eye(self.nTurbines)*(CT_high_wind-CT_low_wind)/(2.0*h)
 
-        # print 'CT', CT_high_yaw, CT_low_yaw
-
+        # compile full Jacobian from sub-matrices
         dCP = np.hstack((dCP_dyaw, dCP_dwind))
         dCT = np.hstack((dCT_dyaw, dCT_dwind))
-
         J = np.vstack((dCP, dCT))
-        # print 'J = ', J
-        self.J = J
-        # print 'in CPCT interp, wind_speed_hub = ', self.wind_speed_hub
 
-    def list_deriv_vars(self):
-        return ('yaw', 'wind_speed_hub'), ('CP', 'CT')
+        return J
 
-    def provideJ(self):
-        return self.J
+    # def provideJ(self):     # central differencing with Richardson Extrapolation
+    #     # set step size for finite differencing
+    #     h = 1e-6
+    #
+    #     # calculate upper and lower function values
+    #     wind_speed_ax_high_yaw_1 = np.cos((self.yaw+h)*np.pi/180.0)**(self.pP/3.0)*self.wind_speed_hub
+    #     wind_speed_ax_low_yaw_1 = np.cos((self.yaw-h)*np.pi/180.0)**(self.pP/3.0)*self.wind_speed_hub
+    #     wind_speed_ax_high_wind_1 = np.cos((self.yaw)*np.pi/180.0)**(self.pP/3.0)*(self.wind_speed_hub+h)
+    #     wind_speed_ax_low_wind_1 = np.cos((self.yaw)*np.pi/180.0)**(self.pP/3.0)*(self.wind_speed_hub-h)
+    #
+    #     # use interpolation on precalculated CP-CT curve
+    #     wind_speed_ax_high_yaw_1 = np.maximum(wind_speed_ax_high_yaw_1, self.windSpeedToCPCT.wind_speed[0])
+    #     wind_speed_ax_low_yaw_1 = np.maximum(wind_speed_ax_low_yaw_1, self.windSpeedToCPCT.wind_speed[0])
+    #     wind_speed_ax_high_wind_1 = np.maximum(wind_speed_ax_high_wind_1, self.windSpeedToCPCT.wind_speed[0])
+    #     wind_speed_ax_low_wind_1 = np.maximum(wind_speed_ax_low_wind_1, self.windSpeedToCPCT.wind_speed[0])
+    #
+    #     wind_speed_ax_high_yaw_1 = np.minimum(wind_speed_ax_high_yaw_1, self.windSpeedToCPCT.wind_speed[-1])
+    #     wind_speed_ax_low_yaw_1 = np.minimum(wind_speed_ax_low_yaw_1, self.windSpeedToCPCT.wind_speed[-1])
+    #     wind_speed_ax_high_wind_1 = np.minimum(wind_speed_ax_high_wind_1, self.windSpeedToCPCT.wind_speed[-1])
+    #     wind_speed_ax_low_wind_1 = np.minimum(wind_speed_ax_low_wind_1, self.windSpeedToCPCT.wind_speed[-1])
+    #
+    #     CP_high_yaw_1 = interp(wind_speed_ax_high_yaw_1, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
+    #     CP_low_yaw_1 = interp(wind_speed_ax_low_yaw_1, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
+    #     CP_high_wind_1 = interp(wind_speed_ax_high_wind_1, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
+    #     CP_low_wind_1 = interp(wind_speed_ax_low_wind_1, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
+    #
+    #     CT_high_yaw_1 = interp(wind_speed_ax_high_yaw_1, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
+    #     CT_low_yaw_1 = interp(wind_speed_ax_low_yaw_1, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
+    #     CT_high_wind_1 = interp(wind_speed_ax_high_wind_1, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
+    #     CT_low_wind_1 = interp(wind_speed_ax_low_wind_1, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
+    #
+    #     # normalize on incoming wind speed to correct coefficients for yaw
+    #     CP_high_yaw_1 = CP_high_yaw_1 * np.cos((self.yaw+h)*np.pi/180.0)**self.pP
+    #     CP_low_yaw_1 = CP_low_yaw_1 * np.cos((self.yaw-h)*np.pi/180.0)**self.pP
+    #     CP_high_wind_1 = CP_high_wind_1 * np.cos((self.yaw)*np.pi/180.0)**self.pP
+    #     CP_low_wind_1 = CP_low_wind_1 * np.cos((self.yaw)*np.pi/180.0)**self.pP
+    #
+    #     CT_high_yaw_1 = CT_high_yaw_1 * np.cos((self.yaw+h)*np.pi/180.0)**2
+    #     CT_low_yaw_1 = CT_low_yaw_1 * np.cos((self.yaw-h)*np.pi/180.0)**2
+    #     CT_high_wind_1 = CT_high_wind_1 * np.cos((self.yaw)*np.pi/180.0)**2
+    #     CT_low_wind_1 = CT_low_wind_1 * np.cos((self.yaw)*np.pi/180.0)**2
+    #
+    #     # compute derivative via central differencing and arrange in sub-matrices of the Jacobian
+    #     dCP_dyaw_1 = (CP_high_yaw_1-CP_low_yaw_1)/(2.0*h)
+    #     dCP_dwind_1 = (CP_high_wind_1-CP_low_wind_1)/(2.0*h)
+    #     dCT_dyaw_1 = (CT_high_yaw_1-CT_low_yaw_1)/(2.0*h)
+    #     dCT_dwind_1 = (CT_high_wind_1-CT_low_wind_1)/(2.0*h)
+    #
+    #     h /= 2.0
+    #
+    #     # calculate upper and lower function values
+    #     wind_speed_ax_high_yaw_2 = np.cos((self.yaw+h)*np.pi/180.0)**(self.pP/3.0)*self.wind_speed_hub
+    #     wind_speed_ax_low_yaw_2 = np.cos((self.yaw-h)*np.pi/180.0)**(self.pP/3.0)*self.wind_speed_hub
+    #     wind_speed_ax_high_wind_2 = np.cos((self.yaw)*np.pi/180.0)**(self.pP/3.0)*(self.wind_speed_hub+h)
+    #     wind_speed_ax_low_wind_2 = np.cos((self.yaw)*np.pi/180.0)**(self.pP/3.0)*(self.wind_speed_hub-h)
+    #
+    #     # use interpolation on precalculated CP-CT curve
+    #     wind_speed_ax_high_yaw_2 = np.maximum(wind_speed_ax_high_yaw_2, self.windSpeedToCPCT.wind_speed[0])
+    #     wind_speed_ax_low_yaw_2 = np.maximum(wind_speed_ax_low_yaw_2, self.windSpeedToCPCT.wind_speed[0])
+    #     wind_speed_ax_high_wind_2 = np.maximum(wind_speed_ax_high_wind_2, self.windSpeedToCPCT.wind_speed[0])
+    #     wind_speed_ax_low_wind_2 = np.maximum(wind_speed_ax_low_wind_2, self.windSpeedToCPCT.wind_speed[0])
+    #
+    #     wind_speed_ax_high_yaw_2 = np.minimum(wind_speed_ax_high_yaw_2, self.windSpeedToCPCT.wind_speed[-1])
+    #     wind_speed_ax_low_yaw_2 = np.minimum(wind_speed_ax_low_yaw_2, self.windSpeedToCPCT.wind_speed[-1])
+    #     wind_speed_ax_high_wind_2 = np.minimum(wind_speed_ax_high_wind_2, self.windSpeedToCPCT.wind_speed[-1])
+    #     wind_speed_ax_low_wind_2 = np.minimum(wind_speed_ax_low_wind_2, self.windSpeedToCPCT.wind_speed[-1])
+    #
+    #     CP_high_yaw_2 = interp(wind_speed_ax_high_yaw_2, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
+    #     CP_low_yaw_2 = interp(wind_speed_ax_low_yaw_2, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
+    #     CP_high_wind_2 = interp(wind_speed_ax_high_wind_2, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
+    #     CP_low_wind_2 = interp(wind_speed_ax_low_wind_2, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CP)
+    #
+    #     CT_high_yaw_2 = interp(wind_speed_ax_high_yaw_2, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
+    #     CT_low_yaw_2 = interp(wind_speed_ax_low_yaw_2, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
+    #     CT_high_wind_2 = interp(wind_speed_ax_high_wind_2, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
+    #     CT_low_wind_2 = interp(wind_speed_ax_low_wind_2, self.windSpeedToCPCT.wind_speed, self.windSpeedToCPCT.CT)
+    #
+    #     # normalize on incoming wind speed to correct coefficients for yaw
+    #     CP_high_yaw_2 = CP_high_yaw_2 * np.cos((self.yaw+h)*np.pi/180.0)**self.pP
+    #     CP_low_yaw_2 = CP_low_yaw_2 * np.cos((self.yaw-h)*np.pi/180.0)**self.pP
+    #     CP_high_wind_2 = CP_high_wind_2 * np.cos((self.yaw)*np.pi/180.0)**self.pP
+    #     CP_low_wind_2 = CP_low_wind_2 * np.cos((self.yaw)*np.pi/180.0)**self.pP
+    #
+    #     CT_high_yaw_2 = CT_high_yaw_2 * np.cos((self.yaw+h)*np.pi/180.0)**2
+    #     CT_low_yaw_2 = CT_low_yaw_2 * np.cos((self.yaw-h)*np.pi/180.0)**2
+    #     CT_high_wind_2 = CT_high_wind_2 * np.cos((self.yaw)*np.pi/180.0)**2
+    #     CT_low_wind_2 = CT_low_wind_2 * np.cos((self.yaw)*np.pi/180.0)**2
+    #
+    #     # compute derivative via central differencing
+    #     dCP_dyaw_2 = (CP_high_yaw_2-CP_low_yaw_2)/(2.0*h)
+    #     dCP_dwind_2 = (CP_high_wind_2-CP_low_wind_2)/(2.0*h)
+    #     dCT_dyaw_2 = (CT_high_yaw_2-CT_low_yaw_2)/(2.0*h)
+    #     dCT_dwind_2 = (CT_high_wind_2-CT_low_wind_2)/(2.0*h)
+    #
+    #     # use Richardson Extrapolation and arrange results in sub-matrices of the Jacobian
+    #     dCP_dyaw = np.eye(self.nTurbines)*((4./3.)*(dCP_dyaw_2) - (1./3.)*dCP_dyaw_1)
+    #     dCP_dwind = np.eye(self.nTurbines)*((4./3.)*(dCP_dwind_2) - (1./3.)*dCP_dwind_1)
+    #     dCT_dyaw = np.eye(self.nTurbines)*((4./3.)*(dCT_dyaw_2) - (1./3.)*dCT_dyaw_1)
+    #     dCT_dwind = np.eye(self.nTurbines)*((4./3.)*(dCT_dwind_2) - (1./3.)*dCT_dwind_1)
+    #
+    #     # compile full Jacobian from sub-matrices
+    #     dCP = np.hstack((dCP_dyaw, dCP_dwind))
+    #     dCT = np.hstack((dCT_dyaw, dCT_dwind))
+    #     J = np.vstack((dCP, dCT))
+    #
+    #     return J

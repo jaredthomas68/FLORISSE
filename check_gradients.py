@@ -1,10 +1,32 @@
 from utilities import check_gradient
 from Tapenade_components import floris_wcent_wdiam, floris_overlap, floris_power
-from Analytic_components import floris_adjustCtCp, floris_windframe, floris_AEP
+from Analytic_components import floris_adjustCtCp, floris_windframe, floris_AEP, floris_dist_const
 from rotor_components import CPCT_Interpolate_Gradients
 from Parameters import FLORISParameters
 import numpy as np
 import cPickle as pickle
+
+
+def test_dist_const():
+
+    turbineX = np.array([1521.00978779, 1487.94926246, 2150.60113933, 2117.540614, 2747.13196554, 2780.19249087])
+
+    turbineY =  np.array([305.06623126, 682.80372167, 360.15044013,  737.88793055, 792.97213942,  415.234649])
+
+    # turbineY = np.array([2024.7, 2335.3, 1387.2, 1697.8, 2060.3, 1749.7])
+
+    nTurbs = turbineX.size
+
+    comp = floris_dist_const(nTurbines=nTurbs)
+
+    comp.turbineX = turbineX
+    comp.turbineY = turbineY
+
+    names, errors = check_gradient(comp, fd='central', step_size=1e-6, tol=1e-6, display=True,
+        show_missing_warnings=True, show_scaling_warnings=True, min_grad=1e-6, max_grad=1e6)
+
+    print 'max error: ', max(errors)
+
 
 
 def test_CPCT_Interpolate_Gradients():
@@ -364,7 +386,8 @@ def test_AEP():
 
 if __name__ == '__main__':
 
-    test_CPCT_Interpolate_Gradients()
+    test_dist_const()
+    # test_CPCT_Interpolate_Gradients()
     # test_adjustCtCp()
     # test_windframe()
     # test_wcent_wdiam()

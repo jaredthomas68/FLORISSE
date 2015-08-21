@@ -439,21 +439,28 @@ class floris_dist_const(Component):
             for j in range(i+1, nTurbines):
                 separation[k] = np.sqrt((turbineX[j]-turbineX[i])**2+(turbineY[j]-turbineY[i])**2)
                 k += 1
-        self.separation = separation
-        # print 'sep = ', separation
 
-    # def list_deriv_vars(self):
-    #     return ('turbineXw', 'turbineYw'), ('separation',)
-    #
-    # def provideJ(self):
-    #     nTurbines = self.nTurbines
-    #     turbineX = self.turbineX
-    #     turbineY = self.turbineY
-    #     separation = np.zeros((nTurbines-1.)*nTurbines/2.)
-    #
-    #     k = 0
-    #     for i in range(0, nTurbines):
-    #         for j in range(i+1, nTurbines):
-    #             separation[k] = np.sqrt((turbineX[j]-turbineX[i])**2+(turbineY[j]-turbineY[i])**2)
-    #             k += 1
-    #     self.separation = separation
+        self.separation = separation
+
+
+    def list_deriv_vars(self):
+        return ('turbineX', 'turbineY'), ('separation',)
+
+    def provideJ(self):
+        turbineX = self.turbineX
+        turbineY = self.turbineY
+        nTurbines = turbineX.size
+        J = np.zeros(((nTurbines-1.)*nTurbines/2., 2*nTurbines))
+
+        k = 0
+        for i in range(0, nTurbines):
+            for j in range(i+1, nTurbines):
+                J[k, j] = (turbineX[j]-turbineX[i])*((turbineX[j]-turbineX[i])**2+(turbineY[j]-turbineY[i])**2)**(-0.5)
+                J[k, i] = (turbineX[i]-turbineX[j])*((turbineX[j]-turbineX[i])**2+(turbineY[j]-turbineY[i])**2)**(-0.5)
+                J[k, j+nTurbines] = (turbineY[j]-turbineY[i])*((turbineX[j]-turbineX[i])**2 +
+                                                               (turbineY[j]-turbineY[i])**2)**(-0.5)
+                J[k, i+nTurbines] = (turbineY[i]-turbineY[j])*((turbineX[j]-turbineX[i])**2 +
+                                                               (turbineY[j]-turbineY[i])**2)**(-0.5)
+                k += 1
+
+        return J
